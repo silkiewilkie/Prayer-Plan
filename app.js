@@ -899,6 +899,7 @@
   // SETTINGS VIEW
   // ===========================================================================
   var THEME_KEY = "prayerPlan.theme";
+  var STYLE_KEY = "prayerPlan.style";
   function currentThemeChoice() {
     try { var t = localStorage.getItem(THEME_KEY); if (t === "light" || t === "dark") return t; } catch (e) {}
     return "system";
@@ -911,6 +912,20 @@
     } else {
       if (root.removeAttribute) root.removeAttribute("data-theme");
       try { localStorage.removeItem(THEME_KEY); } catch (e) {}
+    }
+  }
+  function currentStyleChoice() {
+    try { if (localStorage.getItem(STYLE_KEY) === "ancient") return "ancient"; } catch (e) {}
+    return "modern";
+  }
+  function applyStyleChoice(choice) {
+    var root = document.documentElement;
+    if (choice === "ancient") {
+      root.setAttribute("data-style", "ancient");
+      try { localStorage.setItem(STYLE_KEY, "ancient"); } catch (e) {}
+    } else {
+      if (root.removeAttribute) root.removeAttribute("data-style");
+      try { localStorage.removeItem(STYLE_KEY); } catch (e) {}
     }
   }
 
@@ -931,7 +946,20 @@
     });
     row.appendChild(seg);
     appear.appendChild(row);
-    appear.appendChild(el("p", "bank-intro", "“System” follows your device's light/dark setting."));
+
+    var styleRow = el("div", "setting-row");
+    styleRow.appendChild(el("span", "setting-label", "Style"));
+    var styleSeg = el("div", "seg");
+    [["modern", "Modern"], ["ancient", "Ancient"]].forEach(function (o) {
+      var b = el("button", "seg-btn" + (currentStyleChoice() === o[0] ? " is-active" : ""), o[1]);
+      b.type = "button";
+      b.addEventListener("click", function () { applyStyleChoice(o[0]); renderSettings(); });
+      styleSeg.appendChild(b);
+    });
+    styleRow.appendChild(styleSeg);
+    appear.appendChild(styleRow);
+
+    appear.appendChild(el("p", "bank-intro", "“System” follows your device's light/dark setting. “Ancient” gives a warm, parchment, manuscript feel."));
     settingsContentEl.appendChild(appear);
 
     // Add a prayer card

@@ -7,18 +7,19 @@
   <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
   <title>Personal Prayer Plan</title>
   <script>
-    /* Apply the saved theme before paint to avoid a flash. */
+    /* Apply the saved theme + style before paint to avoid a flash. */
     (function () {
       try {
         var t = localStorage.getItem("prayerPlan.theme");
         if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+        if (localStorage.getItem("prayerPlan.style") === "ancient") document.documentElement.setAttribute("data-style", "ancient");
       } catch (e) {}
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <header class="site-header">
@@ -101,7 +102,7 @@
   </footer>
 
   <!-- data.js holds all editable content; app.js renders it. Order matters. -->
-  <script src="data.js?v=12"></script>
-  <script src="app.js?v=12"></script>
+  <script src="data.js?v=13"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

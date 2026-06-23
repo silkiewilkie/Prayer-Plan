@@ -78,6 +78,69 @@
   }
 }
 
+/* ===========================================================================
+ * ANCIENT & SPIRITUAL style — warm parchment, jewel tones, inscriptional type.
+ * Works alongside light/dark. Selected via data-style="ancient".
+ * ========================================================================= */
+:root[data-style="ancient"] {
+  --bg: #ece0c4;
+  --bg-elev: #f5ecd6;
+  --surface: #faf3df;
+  --ink: #3a2c1a;
+  --ink-soft: #6d5a40;
+  --ink-faint: #9c8a6a;
+  --line: #d8c39c;
+  --line-soft: #e8dcbd;
+  --brand: #8a6a2f;
+  --brand-ink: #faf3df;
+  --adoration: #6f4a93;
+  --confession: #a4382c;
+  --thanksgiving: #5e7a35;
+  --supplication: #355f87;
+  --shadow-sm: 0 1px 2px rgba(74, 54, 28, 0.10);
+  --shadow-md: 0 1px 3px rgba(74, 54, 28, 0.10), 0 10px 26px rgba(74, 54, 28, 0.13);
+  --font-ui: "EB Garamond", Georgia, "Times New Roman", serif;
+  --font-scripture: "EB Garamond", Georgia, serif;
+}
+:root[data-style="ancient"][data-theme="dark"] {
+  --bg: #1b1610;
+  --bg-elev: #241d14;
+  --surface: #2a2216;
+  --ink: #efe3c9;
+  --ink-soft: #c6b591;
+  --ink-faint: #93805f;
+  --line: #3e3424;
+  --line-soft: #2f2719;
+  --brand: #c9a85f;
+  --brand-ink: #1b1610;
+  --adoration: #b794d8;
+  --confession: #dd8a72;
+  --thanksgiving: #a3bd6f;
+  --supplication: #82acd6;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-style="ancient"]:not([data-theme="light"]) {
+    --bg: #1b1610;
+    --bg-elev: #241d14;
+    --surface: #2a2216;
+    --ink: #efe3c9;
+    --ink-soft: #c6b591;
+    --ink-faint: #93805f;
+    --line: #3e3424;
+    --line-soft: #2f2719;
+    --brand: #c9a85f;
+    --brand-ink: #1b1610;
+    --adoration: #b794d8;
+    --confession: #dd8a72;
+    --thanksgiving: #a3bd6f;
+    --supplication: #82acd6;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
 * { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -896,6 +959,34 @@ body {
   font-size: 1.05rem;
   line-height: 1.5;
 }
+
+/* ---- ancient style accents ------------------------------------------------ */
+:root[data-style="ancient"] body {
+  background-image: radial-gradient(140% 100% at 50% -5%, transparent 55%, color-mix(in srgb, var(--ink) 12%, transparent) 100%);
+  background-attachment: fixed;
+}
+:root[data-style="ancient"] .site-title,
+:root[data-style="ancient"] .day-name,
+:root[data-style="ancient"] .pc-title,
+:root[data-style="ancient"] .card-title,
+:root[data-style="ancient"] .add-title,
+:root[data-style="ancient"] .pc-label,
+:root[data-style="ancient"] .card-label,
+:root[data-style="ancient"] .pc-chip,
+:root[data-style="ancient"] .filter-label,
+:root[data-style="ancient"] .day-date,
+:root[data-style="ancient"] .attribute-name,
+:root[data-style="ancient"] .seg-btn,
+:root[data-style="ancient"] .mode-btn,
+:root[data-style="ancient"] .view-tab {
+  font-family: "Cinzel", Georgia, serif;
+  letter-spacing: 0.04em;
+}
+:root[data-style="ancient"] .site-title { letter-spacing: 0.08em; }
+:root[data-style="ancient"] .card,
+:root[data-style="ancient"] .prayer-card,
+:root[data-style="ancient"] .attributes,
+:root[data-style="ancient"] .item-row { border-color: color-mix(in srgb, var(--brand) 22%, var(--line)); }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {
