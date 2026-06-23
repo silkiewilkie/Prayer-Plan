@@ -856,7 +856,7 @@ body {
 .add-request { display: flex; gap: 8px; }
 .add-request .field-input { flex: 1; }
 
-.export-card { display: flex; flex-direction: column; gap: 10px; }
+.export-card, .import-card { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---- prayer cards --------------------------------------------------------- */
 #cards-content { display: flex; flex-direction: column; gap: 14px; }

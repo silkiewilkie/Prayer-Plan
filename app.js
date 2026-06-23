@@ -1043,6 +1043,32 @@
       pentecost: "Pentecost", ordinary: "Ordinary Time" }[s] || "Ordinary Time";
   }
 
+  // Replace the current plan with an exported one (from the Back up / export box).
+  function importPlan(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { return { ok: false, msg: "That isn't valid JSON." }; }
+    var c = data.content || data;
+    if (!c || !c.banks || !c.supplication || !c.supplication.subjects) {
+      return { ok: false, msg: "This doesn't look like a prayer-plan export." };
+    }
+    content.banks = {
+      adoration: c.banks.adoration || [],
+      confession: c.banks.confession || [],
+      thanksgiving: c.banks.thanksgiving || []
+    };
+    content.supplication = { subjects: c.supplication.subjects || [] };
+    saveContent();
+    banks = content.banks; subjects = content.supplication.subjects;
+    cards.extras = (data.cards && data.cards.extras) ? data.cards.extras : (data.cards || {});
+    saveCards();
+    state.queues = { adoration: [], confession: [], thanksgiving: [], supplication: {} };
+    var oi = state.order.indexOf(todayKey); if (oi > -1) state.order.splice(oi, 1);
+    delete state.history[todayKey];
+    saveState();
+    todayKey = ensureToday(); viewKey = todayKey; dayCardIndex = 0;
+    return { ok: true, msg: "Imported. Your plan has been loaded — check the Today and bank tabs." };
+  }
+
   function renderSettings() {
     settingsContentEl.innerHTML = "";
 
@@ -1095,6 +1121,27 @@
       else { nin.focus(); note.textContent = v ? "“" + v + "” already exists." : ""; }
     });
     settingsContentEl.appendChild(form);
+
+    // Import / restore a plan
+    var imp = el("form", "card import-card");
+    imp.appendChild(el("h3", "add-title", "Import / restore a plan"));
+    imp.appendChild(el("p", "bank-intro", "Paste a plan you exported (from a Back up / export box) to load it here. This replaces your current banks, people, and prayer cards."));
+    var ita = el("textarea", "notes-input"); ita.rows = 4; ita.placeholder = "Paste exported plan JSON here…";
+    imp.appendChild(ita);
+    var ibtn = el("button", "btn btn-primary", "Import plan"); ibtn.type = "submit"; imp.appendChild(ibtn);
+    var inote = el("p", "settings-note"); imp.appendChild(inote);
+    imp.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!ita.value.trim()) { ita.focus(); return; }
+      if (typeof window.confirm === "function" && !window.confirm("Import this plan? It replaces your current banks, people, and prayer cards.")) return;
+      var r = importPlan(ita.value);
+      inote.textContent = r.msg;
+      if (r.ok) { ita.value = ""; }
+    });
+    settingsContentEl.appendChild(imp);
+
+    // Back up / export (also available on each bank tab)
+    settingsContentEl.appendChild(exportCard());
   }
 
   // ---- go -------------------------------------------------------------------
