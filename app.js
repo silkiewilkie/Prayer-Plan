@@ -638,8 +638,10 @@
     var entry = deck[cardIndex];
     var cat = CARD_CAT[entry.type];
     cardCounterEl.textContent = (cardIndex + 1) + " / " + deck.length;
-    prevCardBtn.disabled = cardIndex <= 0;
-    nextCardBtn.disabled = cardIndex >= deck.length - 1;
+    // deck loops, so arrows stay active unless there's only one card
+    var single = deck.length <= 1;
+    prevCardBtn.disabled = single;
+    nextCardBtn.disabled = single;
 
     var card = el("article", "prayer-card prayer-card--" + cat.kind);
     var head = el("header", "pc-head");
@@ -675,8 +677,9 @@
 
   function stepCard(delta) {
     var len = buildDeck().length;
-    var next = cardIndex + delta;
-    if (next >= 0 && next < len) { cardIndex = next; scrEditing = false; renderCards(); }
+    if (len === 0) return;
+    cardIndex = ((cardIndex + delta) % len + len) % len; // wrap around the deck
+    scrEditing = false; renderCards();
   }
   prevCardBtn.addEventListener("click", function () { stepCard(-1); });
   nextCardBtn.addEventListener("click", function () { stepCard(1); });
