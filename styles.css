@@ -101,25 +101,32 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* segmented control */
+/* segmented control (scrolls horizontally when tabs overflow) */
 .view-tabs {
-  display: inline-flex;
+  display: flex;
   gap: 2px;
+  max-width: 100%;
   padding: 3px;
   background: var(--line-soft);
   border: 1px solid var(--line);
   border-radius: 999px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.view-tabs::-webkit-scrollbar { display: none; }
 
 .view-tab {
   appearance: none;
+  flex: 0 0 auto;
   border: none;
   background: transparent;
   color: var(--ink-soft);
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   font-weight: 600;
-  padding: 7px 18px;
+  white-space: nowrap;
+  padding: 7px 15px;
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
@@ -461,6 +468,137 @@ body {
   .card { animation: none; }
   * { transition-duration: 0.001ms !important; }
 }
+
+/* ---- bank editor ---------------------------------------------------------- */
+#bank-content { display: flex; flex-direction: column; gap: 14px; }
+
+.bank-intro {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.add-form { display: flex; flex-direction: column; gap: 12px; }
+.add-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+.field-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.field-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+
+.btn {
+  appearance: none;
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 9px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-small { padding: 8px 14px; font-size: 0.85rem; }
+
+/* existing bank items */
+.item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--accent, var(--brand));
+}
+.item-row--adoration { --accent: var(--adoration); }
+.item-row--confession { --accent: var(--confession); }
+.item-row--thanksgiving { --accent: var(--thanksgiving); }
+.item-body { flex: 1; min-width: 0; }
+.item-name { margin: 0; font-weight: 700; }
+.item-def { margin: 3px 0 0; color: var(--ink-soft); font-size: 0.92rem; }
+.item-scripture {
+  margin: 6px 0 0;
+  font-family: var(--font-scripture);
+  font-style: italic;
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+.item-ref { font-family: var(--font-ui); font-style: normal; font-weight: 700; font-size: 0.8rem; color: var(--accent, var(--brand)); }
+
+.item-remove {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 1.2rem;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.item-remove:hover { background: var(--confession); border-color: var(--confession); color: #fff; }
+
+/* supplication subject groups */
+.subject-group { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+.subject-head { display: flex; align-items: center; gap: 10px; }
+.subject-head .supplication-subject { font-size: 0.9rem; }
+.subject-count { margin-right: auto; color: var(--ink-faint); font-size: 0.8rem; }
+
+.request-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.request-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.request-text { flex: 1; min-width: 0; }
+.request-item .item-remove { width: 26px; height: 26px; font-size: 1.05rem; }
+
+.add-request { display: flex; gap: 8px; }
+.add-request .field-input { flex: 1; }
+
+.export-card { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {

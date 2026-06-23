@@ -9,14 +9,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 </head>
 <body>
   <header class="site-header">
     <div class="site-header-inner">
       <h1 class="site-title">Weekly Prayer Plan</h1>
       <nav class="view-tabs" aria-label="Views" role="tablist">
-        <button type="button" class="view-tab is-active" data-view="day">Daily</button>
+        <button type="button" class="view-tab is-active" data-view="day">Today</button>
+        <button type="button" class="view-tab" data-view="adoration">Adoration</button>
+        <button type="button" class="view-tab" data-view="confession">Confession</button>
+        <button type="button" class="view-tab" data-view="thanksgiving">Thanksgiving</button>
+        <button type="button" class="view-tab" data-view="supplication">Supplication</button>
         <button type="button" class="view-tab" data-view="attributes">Attributes</button>
       </nav>
     </div>
@@ -33,6 +37,11 @@
     <section id="day-content" class="day-content" aria-live="polite"></section>
   </main>
 
+  <!-- BANK EDITOR VIEW -->
+  <main id="bank-view" class="view is-hidden">
+    <section id="bank-content"></section>
+  </main>
+
   <!-- ATTRIBUTES VIEW -->
   <main id="attributes-view" class="view is-hidden">
     <section class="attributes" id="attributes-content"></section>
@@ -43,7 +52,7 @@
   </footer>
 
   <!-- data.js holds all editable content; app.js renders it. Order matters. -->
-  <script src="data.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="data.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

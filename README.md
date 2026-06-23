@@ -21,11 +21,23 @@ JavaScript.
 - **Locally:** open `index.html` in any web browser.
 - **On the web (GitHub Pages):** see *Publishing* below.
 
-## Editing the content
+## Adding content in the app (no code)
 
-**All content lives in [`data.js`](data.js) — that's the only file you edit.**
-You do not need to touch the HTML, CSS, or `app.js`. The bigger each bank, the
-more variety before anything repeats. After editing, just reload the page.
+Each bank has its own **tab** at the top — **Adoration, Confession, Thanksgiving,
+Supplication**. Open a tab to see everything in that bank and **add your own**
+items (or, for Supplication, add people and requests). Additions save in your
+browser and join the rotation on the next day's draw.
+
+Because those additions live in your browser only, each bank tab has an
+**Export** button: tap it to copy your additions and send them to Claude to bake
+them permanently into `data.js` (so they're shared across devices and survive a
+cache clear).
+
+## Editing the content in code
+
+**The starting content lives in [`data.js`](data.js).** You do not need to touch
+the HTML, CSS, or `app.js`. The bigger each bank, the more variety before
+anything repeats. After editing, just reload the page.
 
 Inside `data.js`:
 
