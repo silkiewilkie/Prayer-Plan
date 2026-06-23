@@ -914,7 +914,7 @@
       try { localStorage.removeItem(THEME_KEY); } catch (e) {}
     }
   }
-  var STYLES = ["ancient", "celestial", "liturgical"];
+  var STYLES = ["ancient", "celestial", "liturgical", "scroll"];
   function currentStyleChoice() {
     try { var s = localStorage.getItem(STYLE_KEY); if (STYLES.indexOf(s) > -1) return s; } catch (e) {}
     return "modern";
@@ -989,7 +989,7 @@
     var styleRow = el("div", "setting-row");
     styleRow.appendChild(el("span", "setting-label", "Style"));
     var styleSel = el("select", "filter-select");
-    [["modern", "Modern"], ["ancient", "Ancient"], ["celestial", "Celestial Night"], ["liturgical", "Liturgical Seasons"]].forEach(function (o) {
+    [["modern", "Modern"], ["ancient", "Ancient"], ["scroll", "Scroll"], ["celestial", "Celestial Night"], ["liturgical", "Liturgical Seasons"]].forEach(function (o) {
       var opt = document.createElement("option");
       opt.value = o[0]; opt.textContent = o[1];
       if (currentStyleChoice() === o[0]) opt.selected = true;
@@ -999,7 +999,7 @@
     styleRow.appendChild(styleSel);
     appear.appendChild(styleRow);
 
-    var hint = "“System” follows your device's light/dark setting. Ancient is warm parchment; Celestial Night is a starlit theme; Liturgical Seasons follows the church calendar.";
+    var hint = "“System” follows your device's light/dark setting. Ancient is warm parchment; Scroll adds parchment texture with a cursive hand; Celestial Night is starlit; Liturgical Seasons follows the church calendar.";
     if (currentStyleChoice() === "liturgical") hint = "Liturgical color for today: " + seasonLabel(liturgicalSeason(new Date())) + ". The palette changes with the church calendar.";
     appear.appendChild(el("p", "bank-intro", hint));
     settingsContentEl.appendChild(appear);

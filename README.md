@@ -20,6 +20,8 @@ Dark) and **Style** — plus an **Add a prayer card** form. Styles:
 
 - **Modern** (default) — clean and minimal.
 - **Ancient** — warm parchment, jewel tones, inscriptional Cinzel headings.
+- **Scroll** — textured parchment (rolled-edge shading + aged fibers, all CSS)
+  with a readable cursive hand (Dancing Script body, Pinyon Script headings).
 - **Celestial Night** — a deep indigo, starlit theme with soft gold.
 - **Liturgical Seasons** — the accent color follows the church calendar
   automatically (Advent/Lent violet, Christmas/Easter gold, Pentecost red,

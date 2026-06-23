@@ -189,6 +189,30 @@
 :root[data-style="liturgical"][data-season="pentecost"] { --brand: #b3402f; --brand-ink: #fff; --bg: #f9f1ef; }
 :root[data-style="liturgical"][data-season="ordinary"]  { --brand: #3f7d4f; --brand-ink: #fff; --bg: #f1f5f1; }
 
+/* ===========================================================================
+ * SCROLL style — textured parchment background with a readable cursive hand.
+ * ========================================================================= */
+:root[data-style="scroll"] {
+  --bg: #e7d6af;
+  --bg-elev: #f1e6c8;
+  --surface: #f5ecd2;
+  --ink: #45371f;
+  --ink-soft: #6e5a39;
+  --ink-faint: #9a875f;
+  --line: #cbb488;
+  --line-soft: #ded0a6;
+  --brand: #8a3a2c;
+  --brand-ink: #f5ecd2;
+  --adoration: #6a4a86;
+  --confession: #9a3a2e;
+  --thanksgiving: #5f7a35;
+  --supplication: #355f87;
+  --shadow-sm: 0 1px 2px rgba(74, 54, 28, 0.12);
+  --shadow-md: 0 1px 3px rgba(74, 54, 28, 0.12), 0 10px 24px rgba(74, 54, 28, 0.15);
+  --font-ui: "Dancing Script", "Segoe Script", cursive;
+  --font-scripture: "Dancing Script", "Segoe Script", cursive;
+}
+
 * { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -1025,6 +1049,60 @@ body {
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
+
+/* ---- scroll style: parchment texture + cursive ---------------------------- */
+:root[data-style="scroll"] body {
+  font-size: 17px;
+  background-color: #e7d6af;
+  background-image:
+    radial-gradient(55% 40% at 18% 16%, rgba(120, 90, 40, 0.07), transparent),
+    radial-gradient(45% 35% at 82% 66%, rgba(120, 90, 40, 0.08), transparent),
+    radial-gradient(42% 30% at 48% 92%, rgba(90, 65, 25, 0.06), transparent),
+    repeating-linear-gradient(90deg, rgba(150, 120, 70, 0.05) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(0deg, rgba(150, 120, 70, 0.04) 0 1px, transparent 1px 6px),
+    linear-gradient(90deg, rgba(90, 65, 25, 0.30), rgba(90, 65, 25, 0) 7%, rgba(90, 65, 25, 0) 93%, rgba(90, 65, 25, 0.30)),
+    linear-gradient(180deg, #ece0c0, #e2cfa6);
+  background-attachment: fixed;
+}
+:root[data-style="scroll"] .card,
+:root[data-style="scroll"] .prayer-card,
+:root[data-style="scroll"] .attributes {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 18%, var(--line));
+}
+:root[data-style="scroll"] .site-title,
+:root[data-style="scroll"] .day-name,
+:root[data-style="scroll"] .pc-title,
+:root[data-style="scroll"] .card-title,
+:root[data-style="scroll"] .add-title {
+  font-family: "Pinyon Script", "Dancing Script", cursive;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+:root[data-style="scroll"] .site-title { font-size: 1.55rem; }
+:root[data-style="scroll"] .day-name { font-size: 2rem; }
+:root[data-style="scroll"] .pc-title { font-size: 1.95rem; }
+:root[data-style="scroll"] .card-title { font-size: 1.45rem; }
+/* cursive doesn't suit uppercase/letter-spaced labels — relax them and enlarge */
+:root[data-style="scroll"] .card-label,
+:root[data-style="scroll"] .pc-label,
+:root[data-style="scroll"] .filter-label,
+:root[data-style="scroll"] .field-label,
+:root[data-style="scroll"] .pc-chip,
+:root[data-style="scroll"] .day-date,
+:root[data-style="scroll"] .scripture-ref {
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: normal;
+}
+:root[data-style="scroll"] .card-label,
+:root[data-style="scroll"] .pc-label,
+:root[data-style="scroll"] .pc-chip { font-size: 1rem; font-weight: 600; }
+:root[data-style="scroll"] .scripture-text { font-style: normal; }
+:root[data-style="scroll"] .term-name,
+:root[data-style="scroll"] .supplication-subject,
+:root[data-style="scroll"] .request-text { font-weight: 600; }
 
 /* ---- ancient style accents ------------------------------------------------ */
 :root[data-style="ancient"] body {
