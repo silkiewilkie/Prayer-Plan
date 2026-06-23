@@ -1,4 +1,4 @@
-# Weekly Prayer Plan
+# Personal Prayer Plan
 
 A simple, phone-friendly web app for praying through the **ACTS** model —
 **A**doration, **C**onfession, **T**hanksgiving, **S**upplication — plus an
@@ -14,6 +14,9 @@ On the Today tab, a **List / Cards** toggle lets you read the day as the full
 list — where you can **check off** each section and jot **notes** — or flip
 through today's plan as a focused **deck of prayer cards**. Both are saved
 privately in your browser.
+
+A sun/moon button in the header toggles **light / dark mode** (it overrides your
+device setting and is remembered); without a choice it follows your system theme.
 
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.

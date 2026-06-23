@@ -36,8 +36,29 @@
   --maxw: 680px;
 }
 
+/* Dark palette: applied when the user picks Dark, or by the system default
+   unless the user has explicitly chosen Light. */
+:root[data-theme="dark"],
+:root.theme-dark {
+  --bg: #0f1115;
+  --bg-elev: #15181f;
+  --surface: #181b23;
+  --ink: #eef0f5;
+  --ink-soft: #a6acba;
+  --ink-faint: #757c8c;
+  --line: #262a34;
+  --line-soft: #1f232c;
+  --brand: #8b85f5;
+  --brand-ink: #0f1115;
+  --adoration: #a48cf5;
+  --confession: #ef8197;
+  --thanksgiving: #4ec6a0;
+  --supplication: #6aa5ee;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(0, 0, 0, 0.5);
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1115;
     --bg-elev: #15181f;
     --surface: #181b23;
@@ -86,6 +107,7 @@ body {
 }
 
 .site-header-inner {
+  position: relative;
   max-width: var(--maxw);
   margin: 0 auto;
   display: flex;
@@ -93,6 +115,26 @@ body {
   align-items: center;
   gap: 12px;
 }
+
+.theme-toggle {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+.theme-toggle:hover { color: var(--brand); }
+.theme-toggle:active { transform: scale(0.92); }
+.theme-toggle svg { display: block; }
 
 .site-title {
   margin: 0;
