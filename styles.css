@@ -1,24 +1,60 @@
 /* =============================================================================
- * Prayer Plan — styling. Mobile-first, single column, print-friendly.
- * Section accent colors are defined as CSS variables on each card modifier.
+ * Prayer Plan — modern, clean styling.
+ * Mobile-first, single column, light + dark mode, print-friendly.
+ * Content lives in data.js; this file controls the look.
  * ============================================================================= */
 
 :root {
-  --bg: #f4f5f8;
+  --bg: #f6f7f9;
+  --bg-elev: #ffffff;
   --surface: #ffffff;
-  --ink: #1f2430;
-  --ink-soft: #5b6275;
-  --line: #e3e6ee;
-  --brand: #3b4a6b;
+  --ink: #15181f;
+  --ink-soft: #5c6270;
+  --ink-faint: #8b91a0;
+  --line: #ecedf1;
+  --line-soft: #f2f3f6;
+  --brand: #5b54e0;
   --brand-ink: #ffffff;
 
-  --adoration: #6a4c93;   /* purple  */
-  --confession: #b5546b;  /* rose    */
-  --thanksgiving: #2e8b6f;/* green   */
-  --supplication: #2f6fb0;/* blue    */
+  /* ACTS accents — calm, slightly desaturated */
+  --adoration: #7c5cea;
+  --confession: #e0667d;
+  --thanksgiving: #1fa97f;
+  --supplication: #3d86e0;
 
-  --radius: 14px;
-  --shadow: 0 1px 3px rgba(20, 28, 50, 0.08), 0 6px 16px rgba(20, 28, 50, 0.06);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.04);
+  --shadow-md: 0 1px 3px rgba(20, 24, 40, 0.05), 0 10px 30px rgba(20, 24, 40, 0.06);
+
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-scripture: "Newsreader", Georgia, "Times New Roman", serif;
+
+  --maxw: 680px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --bg-elev: #15181f;
+    --surface: #181b23;
+    --ink: #eef0f5;
+    --ink-soft: #a6acba;
+    --ink-faint: #757c8c;
+    --line: #262a34;
+    --line-soft: #1f232c;
+    --brand: #8b85f5;
+    --brand-ink: #0f1115;
+    --adoration: #a48cf5;
+    --confession: #ef8197;
+    --thanksgiving: #4ec6a0;
+    --supplication: #6aa5ee;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -29,60 +65,76 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-  line-height: 1.55;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ---- header & view tabs --------------------------------------------------- */
+/* ---- header --------------------------------------------------------------- */
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: var(--brand);
-  color: var(--brand-ink);
-  padding: 14px 16px 0;
-  box-shadow: var(--shadow);
+  z-index: 20;
+  background: color-mix(in srgb, var(--bg-elev) 80%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
+  padding: max(env(safe-area-inset-top), 12px) 16px 12px;
+}
+
+.site-header-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 .site-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  text-align: center;
+  letter-spacing: -0.02em;
 }
 
+/* segmented control */
 .view-tabs {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 12px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--line-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
 }
 
 .view-tab {
   appearance: none;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ink-soft);
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  padding: 8px 14px;
-  border-bottom: 3px solid transparent;
+  padding: 7px 18px;
+  border-radius: 999px;
   cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 .view-tab.is-active {
-  color: #fff;
-  border-bottom-color: #fff;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
 }
 
-/* ---- layout containers ---------------------------------------------------- */
+/* ---- layout --------------------------------------------------------------- */
 .view {
-  max-width: 720px;
+  max-width: var(--maxw);
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px 8px;
 }
 .is-hidden { display: none; }
 
@@ -99,174 +151,253 @@ body {
   flex: 1;
   gap: 6px;
   overflow-x: auto;
+  padding-bottom: 2px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
 }
 .day-pills::-webkit-scrollbar { display: none; }
 
 .day-pill {
   appearance: none;
   flex: 1 0 auto;
-  min-width: 44px;
+  min-width: 46px;
+  scroll-snap-align: center;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink-soft);
   font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   padding: 9px 8px;
-  border-radius: 999px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: transform 0.15s ease, background 0.18s ease,
+    color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
+.day-pill:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); }
 .day-pill.is-active {
   background: var(--brand);
   border-color: var(--brand);
-  color: #fff;
+  color: var(--brand-ink);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 35%, transparent);
 }
+.day-pill:active { transform: scale(0.96); }
 
 .day-arrow {
   appearance: none;
   flex: 0 0 auto;
   width: 40px;
   height: 40px;
+  display: grid;
+  place-items: center;
   border: 1px solid var(--line);
   background: var(--surface);
-  color: var(--brand);
-  font-size: 1.4rem;
+  color: var(--ink-soft);
+  font-size: 1.35rem;
   line-height: 1;
-  border-radius: 50%;
+  border-radius: 12px;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.day-arrow:active { background: var(--bg); }
+.day-arrow:hover { color: var(--brand); }
+.day-arrow:active { transform: scale(0.94); }
+
+/* ---- day heading ---------------------------------------------------------- */
+.day-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 2px 16px;
+}
+.day-name {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.today-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 24%, transparent);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
 
 /* ---- cards ---------------------------------------------------------------- */
-.day-content { display: flex; flex-direction: column; gap: 16px; }
+.day-content { display: flex; flex-direction: column; gap: 14px; }
 
 .card {
+  position: relative;
   background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border-left: 5px solid var(--accent, var(--brand));
-  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 18px 20px 20px;
+  animation: rise 0.4s cubic-bezier(0.21, 0.61, 0.35, 1) both;
 }
 .card--adoration { --accent: var(--adoration); }
 .card--confession { --accent: var(--confession); }
 .card--thanksgiving { --accent: var(--thanksgiving); }
 .card--supplication { --accent: var(--supplication); }
 
+/* gentle staggered entrance */
+.card:nth-child(1) { animation-delay: 0.02s; }
+.card:nth-child(2) { animation-delay: 0.07s; }
+.card:nth-child(3) { animation-delay: 0.12s; }
+.card:nth-child(4) { animation-delay: 0.17s; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .card-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 13px;
+  margin-bottom: 14px;
 }
 
 .card-badge {
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
-  background: var(--accent, var(--brand));
-  color: #fff;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
   font-weight: 800;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
 }
 
-.card-heading { display: flex; flex-direction: column; line-height: 1.25; }
+.card-heading { display: flex; flex-direction: column; line-height: 1.25; gap: 1px; }
 .card-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   font-weight: 700;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
 }
 .card-title {
-  font-size: 1.12rem;
+  font-size: 1.18rem;
   font-weight: 700;
-  color: var(--accent, var(--ink));
+  letter-spacing: -0.02em;
+  color: var(--accent);
 }
 
 /* term + definition */
-.term-block { margin-top: 12px; }
-.term-block:first-of-type { margin-top: 4px; }
-.term-line { margin: 0 0 6px; }
+.term-block { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--line-soft); }
+.term-block:first-of-type { padding-top: 0; margin-top: 0; border-top: none; }
+.term-line { margin: 0 0 8px; }
 .term-name { font-weight: 700; }
 .term-def { color: var(--ink-soft); }
 
-/* scripture quote */
-.scripture { margin: 8px 0 0; }
+/* scripture */
+.scripture { margin: 10px 0 0; padding-left: 16px; border-left: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); }
 .scripture-ref {
   font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--accent, var(--brand));
-  margin-bottom: 2px;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+  margin-bottom: 3px;
+  font-family: var(--font-ui);
 }
 .scripture-text {
   margin: 0;
-  padding-left: 12px;
-  border-left: 2px solid var(--line);
-  color: var(--ink);
+  font-family: var(--font-scripture);
   font-style: italic;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  color: var(--ink);
 }
 
-/* supplication list */
+/* supplication */
 .supplication-list {
   list-style: none;
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
 }
 .supplication-item {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto 1fr;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
 }
-.supplication-subject { font-weight: 700; white-space: nowrap; }
-.supplication-arrow { color: var(--supplication); font-weight: 700; }
+.supplication-subject {
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 2px 10px;
+  border-radius: 999px;
+  align-self: center;
+}
+.supplication-arrow { display: none; }
 .supplication-request { color: var(--ink); }
 
 /* ---- attributes view ------------------------------------------------------ */
-.attributes { display: flex; flex-direction: column; gap: 10px; }
-.attribute {
+.attributes {
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
+.attribute { padding: 14px 18px; border-top: 1px solid var(--line-soft); }
+.attribute:first-child { border-top: none; }
 .attribute-name {
   display: block;
   font-weight: 700;
-  color: var(--brand);
+  letter-spacing: -0.01em;
   margin-bottom: 2px;
 }
 .attribute-def { color: var(--ink-soft); }
 
 /* ---- footer --------------------------------------------------------------- */
 .site-footer {
+  max-width: var(--maxw);
+  margin: 8px auto 0;
   text-align: center;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
+  color: var(--ink-faint);
+  font-family: var(--font-scripture);
   font-style: italic;
-  padding: 8px 16px 28px;
+  font-size: 0.95rem;
+  padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
 }
 
 /* ---- larger screens ------------------------------------------------------- */
 @media (min-width: 560px) {
-  .site-title { font-size: 1.4rem; }
-  .day-pill { font-size: 0.9rem; }
-  .card-title { font-size: 1.2rem; }
+  .site-title { font-size: 1.15rem; }
+  .day-name { font-size: 1.9rem; }
+  .card-title { font-size: 1.25rem; }
+  .scripture-text { font-size: 1.12rem; }
+}
+
+/* ---- reduced motion ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+  * { transition-duration: 0.001ms !important; }
 }
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {
+  body { background: #fff; color: #000; }
   .site-header, .day-nav, .site-footer { display: none; }
   .view { max-width: none; }
-  .card { box-shadow: none; border: 1px solid var(--line); break-inside: avoid; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; animation: none; }
   .is-hidden { display: none !important; }
 }

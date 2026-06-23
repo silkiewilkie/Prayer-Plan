@@ -2,18 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#3b4a6b" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
   <title>Weekly Prayer Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
-    <h1 class="site-title">Weekly Prayer Plan</h1>
-    <nav class="view-tabs" aria-label="Views">
-      <button type="button" class="view-tab is-active" data-view="day">Daily</button>
-      <button type="button" class="view-tab" data-view="attributes">Attributes of God</button>
-    </nav>
+    <div class="site-header-inner">
+      <h1 class="site-title">Weekly Prayer Plan</h1>
+      <nav class="view-tabs" aria-label="Views" role="tablist">
+        <button type="button" class="view-tab is-active" data-view="day">Daily</button>
+        <button type="button" class="view-tab" data-view="attributes">Attributes</button>
+      </nav>
+    </div>
   </header>
 
   <!-- DAY VIEW -->
@@ -23,6 +29,8 @@
       <div class="day-pills" id="day-pills" role="tablist"></div>
       <button type="button" class="day-arrow" id="next-day" aria-label="Next day">&#8250;</button>
     </nav>
+
+    <header class="day-heading" id="day-heading"></header>
 
     <section id="day-content" class="day-content" aria-live="polite"></section>
   </main>

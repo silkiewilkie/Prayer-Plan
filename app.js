@@ -11,6 +11,7 @@
 
   // ---- element handles ------------------------------------------------------
   var pillsEl = document.getElementById("day-pills");
+  var headingEl = document.getElementById("day-heading");
   var contentEl = document.getElementById("day-content");
   var attributesEl = document.getElementById("attributes-content");
   var prevBtn = document.getElementById("prev-day");
@@ -22,10 +23,11 @@
   // ---- pick the starting day = today ----------------------------------------
   // JS getDay(): Sunday=0..Saturday=6. Our data is ordered Monday..Sunday.
   var jsToIndex = [6, 0, 1, 2, 3, 4, 5]; // map getDay() -> index in days[]
-  var activeIndex = jsToIndex[new Date().getDay()];
-  if (activeIndex == null || activeIndex < 0 || activeIndex >= days.length) {
-    activeIndex = 0;
+  var todayIndex = jsToIndex[new Date().getDay()];
+  if (todayIndex == null || todayIndex < 0 || todayIndex >= days.length) {
+    todayIndex = 0;
   }
+  var activeIndex = todayIndex;
 
   // ---- small helpers --------------------------------------------------------
   function el(tag, className, text) {
@@ -72,6 +74,14 @@
 
   function renderDay(index) {
     var day = days[index];
+
+    // day heading with a "Today" badge when applicable
+    headingEl.innerHTML = "";
+    headingEl.appendChild(el("h2", "day-name", day.name));
+    if (index === todayIndex) {
+      headingEl.appendChild(el("span", "today-badge", "Today"));
+    }
+
     contentEl.innerHTML = "";
 
     // Adoration
