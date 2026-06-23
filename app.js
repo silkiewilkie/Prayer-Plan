@@ -18,6 +18,7 @@
 
   var STATE_KEY = "prayerPlan.v3";
   var CUSTOM_KEY = "prayerPlan.banks.v1";
+  var CONTENT_KEY = "prayerPlan.content.v1";
   var CARDS_KEY = "prayerPlan.cards.v1";
   var banks = PRAYER_PLAN.banks;
   var subjects = PRAYER_PLAN.supplication.subjects;
@@ -76,27 +77,58 @@
   }
 
   // ===========================================================================
-  // CUSTOM BANK ADDITIONS
+  // EDITABLE CONTENT STORE (banks + supplication) — fully user-editable.
+  // Seeded from data.js on first run, then owned by the user in localStorage.
+  // Any items previously added (legacy "additions") are migrated in.
   // ===========================================================================
-  function freshCustom() {
-    return { adoration: [], confession: [], thanksgiving: [],
-      supplication: { subjects: [], requests: {} } };
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function seedContent() {
+    return { version: 1, banks: clone(PRAYER_PLAN.banks),
+      supplication: { subjects: clone(PRAYER_PLAN.supplication.subjects) } };
   }
-  function loadCustom() {
+  function migrateLegacy(c) {
     try {
       var raw = localStorage.getItem(CUSTOM_KEY);
-      if (!raw) return freshCustom();
-      var c = JSON.parse(raw);
-      c.adoration = c.adoration || []; c.confession = c.confession || [];
-      c.thanksgiving = c.thanksgiving || [];
-      c.supplication = c.supplication || { subjects: [], requests: {} };
-      c.supplication.subjects = c.supplication.subjects || [];
-      c.supplication.requests = c.supplication.requests || {};
-      return c;
-    } catch (e) { return freshCustom(); }
+      if (!raw) return;
+      var legacy = JSON.parse(raw);
+      ["adoration", "confession", "thanksgiving"].forEach(function (b) {
+        (legacy[b] || []).forEach(function (it) { c.banks[b].push(it); });
+      });
+      var sup = legacy.supplication || {};
+      (sup.subjects || []).forEach(function (s) {
+        if (!c.supplication.subjects.some(function (x) { return x.name === s.name; }))
+          c.supplication.subjects.push({ name: s.name, requests: [] });
+      });
+      var reqs = sup.requests || {};
+      Object.keys(reqs).forEach(function (name) {
+        var subj = c.supplication.subjects.filter(function (s) { return s.name === name; })[0];
+        if (subj) reqs[name].forEach(function (r) { subj.requests.push(r); });
+      });
+    } catch (e) {}
   }
-  var custom = loadCustom();
-  function saveCustom() { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom)); } catch (e) {} }
+  function loadContent() {
+    try {
+      var raw = localStorage.getItem(CONTENT_KEY);
+      if (raw) {
+        var c = JSON.parse(raw);
+        if (c && c.banks && c.supplication) {
+          c.banks.adoration = c.banks.adoration || [];
+          c.banks.confession = c.banks.confession || [];
+          c.banks.thanksgiving = c.banks.thanksgiving || [];
+          c.supplication.subjects = c.supplication.subjects || [];
+          return c;
+        }
+      }
+    } catch (e) {}
+    var fresh = seedContent();
+    migrateLegacy(fresh);
+    return fresh;
+  }
+  var content = loadContent();
+  function saveContent() { try { localStorage.setItem(CONTENT_KEY, JSON.stringify(content)); } catch (e) {} }
+  banks = content.banks;
+  subjects = content.supplication.subjects;
+  if (!localStorage.getItem(CONTENT_KEY)) saveContent(); // persist seed/migration on first run
 
   // Prayer-card extras (Scripture + answered-prayer log), keyed by subject name.
   function loadCards() {
@@ -111,62 +143,54 @@
     return cards.extras[name];
   }
 
-  // record seed sizes BEFORE merging customs (to know what's removable)
-  var seed = { adoration: banks.adoration.length, confession: banks.confession.length,
-    thanksgiving: banks.thanksgiving.length, req: {} };
-  subjects.forEach(function (s) { seed.req[s.name] = s.requests.length; });
-
-  function applyCustom() {
-    custom.adoration.forEach(function (it) { banks.adoration.push(it); });
-    custom.confession.forEach(function (it) { banks.confession.push(it); });
-    custom.thanksgiving.forEach(function (it) { banks.thanksgiving.push(it); });
-    custom.supplication.subjects.forEach(function (s) {
-      if (!subjects.some(function (x) { return x.name === s.name; })) subjects.push({ name: s.name, requests: [] });
-    });
-    Object.keys(custom.supplication.requests).forEach(function (name) {
-      var subj = subjects.filter(function (s) { return s.name === name; })[0];
-      if (subj) custom.supplication.requests[name].forEach(function (r) { subj.requests.push(r); });
-    });
+  // ---- bank item ops (Adoration / Confession / Thanksgiving) -----------------
+  function addBankItem(name, item) { banks[name].push(item); saveContent(); resetQueue(name); }
+  function editBankItem(name, idx, item) {
+    if (idx < 0 || idx >= banks[name].length) return;
+    banks[name][idx] = item; saveContent();
   }
-  applyCustom();
+  function deleteBankItem(name, idx) {
+    if (idx < 0 || idx >= banks[name].length) return;
+    banks[name].splice(idx, 1); saveContent(); resetQueue(name);
+  }
 
-  // ---- shared Supplication ops (used by both the bank tab AND prayer cards) --
+  // ---- supplication ops (shared by the bank tab AND prayer cards) ------------
+  function subjectByName(name) { return subjects.filter(function (s) { return s.name === name; })[0]; }
   function addRequest(name, text) {
-    var subj = subjects.filter(function (s) { return s.name === name; })[0];
-    if (!subj) return;
-    subj.requests.push(text);
-    custom.supplication.requests[name] = custom.supplication.requests[name] || [];
-    custom.supplication.requests[name].push(text);
-    saveCustom(); resetReqQueue(name);
+    var subj = subjectByName(name); if (!subj) return;
+    subj.requests.push(text); saveContent(); resetReqQueue(name);
+  }
+  function editRequest(name, idx, text) {
+    var subj = subjectByName(name); if (!subj || idx < 0 || idx >= subj.requests.length) return;
+    subj.requests[idx] = text; saveContent();
   }
   function removeRequestAt(name, idx) {
-    var subj = subjects.filter(function (s) { return s.name === name; })[0];
-    if (!subj) return;
-    var seedCount = seed.req[name] || 0;
-    if (idx < seedCount) return; // protect seed content
-    subj.requests.splice(idx, 1);
-    (custom.supplication.requests[name] || []).splice(idx - seedCount, 1);
-    saveCustom(); resetReqQueue(name);
-  }
-  function isCustomSubject(name) {
-    return custom.supplication.subjects.some(function (s) { return s.name === name; });
+    var subj = subjectByName(name); if (!subj) return;
+    subj.requests.splice(idx, 1); saveContent(); resetReqQueue(name);
   }
   function addSubject(name) {
-    if (!name || subjects.some(function (s) { return s.name === name; })) return false;
-    subjects.push({ name: name, requests: [] });
-    custom.supplication.subjects.push({ name: name });
-    custom.supplication.requests[name] = custom.supplication.requests[name] || [];
-    saveCustom(); resetReqQueue(name); return true;
+    if (!name || subjectByName(name)) return false;
+    subjects.push({ name: name, requests: [] }); saveContent(); resetReqQueue(name); return true;
+  }
+  function renameSubject(oldName, newName) {
+    newName = (newName || "").trim();
+    if (!newName) return false;
+    if (newName !== oldName && subjectByName(newName)) return false; // name already used
+    var subj = subjectByName(oldName); if (!subj) return false;
+    subj.name = newName;
+    if (state.queues.supplication[oldName]) {
+      state.queues.supplication[newName] = state.queues.supplication[oldName];
+      delete state.queues.supplication[oldName]; saveState();
+    }
+    if (cards.extras[oldName]) { cards.extras[newName] = cards.extras[oldName]; delete cards.extras[oldName]; saveCards(); }
+    saveContent(); return true;
   }
   function removeSubject(name) {
-    if (!isCustomSubject(name)) return;
-    var subj = subjects.filter(function (s) { return s.name === name; })[0];
-    var i = subjects.indexOf(subj); if (i > -1) subjects.splice(i, 1);
-    custom.supplication.subjects = custom.supplication.subjects.filter(function (s) { return s.name !== name; });
-    delete custom.supplication.requests[name];
+    var subj = subjectByName(name); var i = subjects.indexOf(subj);
+    if (i > -1) subjects.splice(i, 1);
     delete state.queues.supplication[name];
     if (cards.extras[name]) { delete cards.extras[name]; saveCards(); }
-    saveCustom(); saveState();
+    saveContent(); saveState();
   }
 
   // ===========================================================================
@@ -454,8 +478,16 @@
   function areaInput(ph) { var i = el("textarea", "field-input"); i.placeholder = ph; i.rows = 2; return i; }
   function removeBtn(onClick) {
     var b = el("button", "item-remove", "×"); b.type = "button";
-    b.setAttribute("aria-label", "Remove");
+    b.setAttribute("aria-label", "Delete");
     b.addEventListener("click", onClick); return b;
+  }
+  function editBtn(onClick) {
+    var b = el("button", "item-edit", "Edit"); b.type = "button";
+    b.setAttribute("aria-label", "Edit");
+    b.addEventListener("click", onClick); return b;
+  }
+  function confirmDelete(label) {
+    return (typeof window.confirm !== "function") || window.confirm("Delete “" + label + "”?");
   }
 
   // ===========================================================================
@@ -466,15 +498,14 @@
     confession: { label: "Confession", kind: "confession", term: true },
     thanksgiving: { label: "Thanksgiving", kind: "thanksgiving", term: false }
   };
+  var editBank = null;   // {name, idx} currently being edited
+  var editReq = null;    // {name, idx} request being edited
+  var renameSubj = null; // subject name being renamed
 
-  function renderBank(name) {
-    if (name === "supplication") return renderSupplicationBank();
-    var meta = BANK_META[name];
-    bankContentEl.innerHTML = "";
-    bankContentEl.appendChild(el("p", "bank-intro",
-      meta.label + " bank · " + banks[name].length + " in rotation. New items join the rotation starting with the next day's draw."));
+  // Build an add/edit form for an Adoration/Confession/Thanksgiving item.
+  function bankItemForm(name, meta, existing, onSave, onCancel) {
     var form = el("form", "card add-form");
-    form.appendChild(el("h3", "add-title", "Add to " + meta.label));
+    form.appendChild(el("h3", "add-title", (existing ? "Edit " : "Add to ") + meta.label));
     var nameInput = textInput(meta.term ? "Word (e.g. Patient)" : "Theme (e.g. Adoption)");
     form.appendChild(labeledInput(meta.term ? "Attribute / Sin" : "Theme", nameInput));
     var defInput;
@@ -483,19 +514,47 @@
     form.appendChild(labeledInput("Scripture reference", refInput));
     var textArea = areaInput("Verse text");
     form.appendChild(labeledInput("Scripture text", textArea));
-    var btn = el("button", "btn btn-primary", "Add"); btn.type = "submit"; form.appendChild(btn);
+    if (existing) {
+      nameInput.value = meta.term ? existing.term : existing.title;
+      if (meta.term) defInput.value = existing.definition || "";
+      var s0 = meta.term ? existing.scripture : (existing.scriptures && existing.scriptures[0]);
+      if (s0) { refInput.value = s0.ref || ""; textArea.value = s0.text || ""; }
+    }
+    var bar = el("div", "pc-btnbar");
+    var save = el("button", "btn btn-primary", existing ? "Save" : "Add"); save.type = "submit";
+    bar.appendChild(save);
+    if (existing) { var cancel = el("button", "btn", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", onCancel); bar.appendChild(cancel); }
+    form.appendChild(bar);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var nm = nameInput.value.trim(); if (!nm) { nameInput.focus(); return; }
       var ref = refInput.value.trim(), txt = textArea.value.trim();
       var scripture = (ref || txt) ? { ref: ref, text: txt } : null;
-      var item = meta.term ? { term: nm, definition: defInput.value.trim(), scripture: scripture }
-        : { title: nm, scriptures: scripture ? [scripture] : [] };
-      banks[name].push(item); custom[name].push(item);
-      saveCustom(); resetQueue(name); renderBank(name);
+      var item;
+      if (meta.term) item = { term: nm, definition: defInput.value.trim(), scripture: scripture };
+      else {
+        var rest = (existing && existing.scriptures) ? existing.scriptures.slice(1) : [];
+        item = { title: nm, scriptures: (scripture ? [scripture] : []).concat(rest) };
+      }
+      onSave(item);
     });
-    bankContentEl.appendChild(form);
+    return form;
+  }
+
+  function renderBank(name) {
+    if (name === "supplication") return renderSupplicationBank();
+    var meta = BANK_META[name];
+    bankContentEl.innerHTML = "";
+    bankContentEl.appendChild(el("p", "bank-intro",
+      meta.label + " bank · " + banks[name].length + " in rotation. Edit or delete any item; changes take effect on the next day's draw."));
+    bankContentEl.appendChild(bankItemForm(name, meta, null, function (item) { addBankItem(name, item); renderBank(name); }, null));
     banks[name].forEach(function (item, idx) {
+      if (editBank && editBank.name === name && editBank.idx === idx) {
+        bankContentEl.appendChild(bankItemForm(name, meta, item,
+          function (updated) { editBankItem(name, idx, updated); editBank = null; renderBank(name); },
+          function () { editBank = null; renderBank(name); }));
+        return;
+      }
       var row = el("div", "card item-row item-row--" + meta.kind);
       var body = el("div", "item-body");
       body.appendChild(el("p", "item-name", meta.term ? item.term : item.title));
@@ -508,10 +567,10 @@
         body.appendChild(sc);
       });
       row.appendChild(body);
-      if (idx >= seed[name]) row.appendChild(removeBtn(function () {
-        banks[name].splice(idx, 1); custom[name].splice(idx - seed[name], 1);
-        saveCustom(); resetQueue(name); renderBank(name);
-      }));
+      var actions = el("div", "item-actions");
+      actions.appendChild(editBtn(function () { editBank = { name: name, idx: idx }; renderBank(name); }));
+      actions.appendChild(removeBtn(function () { if (confirmDelete(meta.term ? item.term : item.title)) { deleteBankItem(name, idx); renderBank(name); } }));
+      row.appendChild(actions);
       bankContentEl.appendChild(row);
     });
     bankContentEl.appendChild(exportCard());
@@ -520,7 +579,7 @@
   function renderSupplicationBank() {
     bankContentEl.innerHTML = "";
     bankContentEl.appendChild(el("p", "bank-intro",
-      "Supplication · " + subjects.length + " people. Each appears every day with one request, rotating through their list. These are the same people as your Prayer Cards."));
+      "Supplication · " + subjects.length + " people. Each appears every day with one rotating request. Edit or delete any person or request. Same people as your Prayer Cards."));
     var pform = el("form", "card add-form");
     pform.appendChild(el("h3", "add-title", "Add a person / area"));
     var pInput = textInput("Name (e.g. Small Group)");
@@ -533,17 +592,49 @@
     bankContentEl.appendChild(pform);
     subjects.forEach(function (subj) {
       var group = el("div", "card subject-group");
-      var head = el("div", "subject-head");
-      head.appendChild(el("span", "supplication-subject", subj.name));
-      head.appendChild(el("span", "subject-count", subj.requests.length + " in rotation"));
-      if (isCustomSubject(subj.name)) head.appendChild(removeBtn(function () { removeSubject(subj.name); renderSupplicationBank(); }));
-      group.appendChild(head);
+      if (renameSubj === subj.name) {
+        var nin = textInput("Name"); nin.value = subj.name;
+        var sform = el("form", "add-request");
+        sform.appendChild(nin);
+        var sv = el("button", "btn btn-small btn-primary", "Save"); sv.type = "submit"; sform.appendChild(sv);
+        var scn = el("button", "btn btn-small", "Cancel"); scn.type = "button";
+        scn.addEventListener("click", function () { renameSubj = null; renderSupplicationBank(); }); sform.appendChild(scn);
+        sform.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (renameSubject(subj.name, nin.value)) { renameSubj = null; renderSupplicationBank(); } else nin.focus();
+        });
+        group.appendChild(sform);
+      } else {
+        var head = el("div", "subject-head");
+        head.appendChild(el("span", "supplication-subject", subj.name));
+        head.appendChild(el("span", "subject-count", subj.requests.length + " in rotation"));
+        var ha = el("div", "item-actions");
+        ha.appendChild(editBtn(function () { renameSubj = subj.name; editReq = null; renderSupplicationBank(); }));
+        ha.appendChild(removeBtn(function () { if (confirmDelete(subj.name)) { removeSubject(subj.name); renderSupplicationBank(); } }));
+        head.appendChild(ha);
+        group.appendChild(head);
+      }
       var list = el("ul", "request-list");
-      var seedCount = seed.req[subj.name] || 0;
       subj.requests.forEach(function (req, idx) {
+        if (editReq && editReq.name === subj.name && editReq.idx === idx) {
+          var efli = el("li", "request-item");
+          var rin = textInput("Request"); rin.value = req;
+          var ef = el("form", "add-request"); ef.appendChild(rin);
+          var es = el("button", "btn btn-small btn-primary", "Save"); es.type = "submit"; ef.appendChild(es);
+          var ec = el("button", "btn btn-small", "Cancel"); ec.type = "button";
+          ec.addEventListener("click", function () { editReq = null; renderSupplicationBank(); }); ef.appendChild(ec);
+          ef.addEventListener("submit", function (e) {
+            e.preventDefault(); var v = rin.value.trim(); if (!v) return;
+            editRequest(subj.name, idx, v); editReq = null; renderSupplicationBank();
+          });
+          efli.appendChild(ef); list.appendChild(efli); return;
+        }
         var li = el("li", "request-item");
         li.appendChild(el("span", "request-text", req));
-        if (idx >= seedCount) li.appendChild(removeBtn(function () { removeRequestAt(subj.name, idx); renderSupplicationBank(); }));
+        var ra = el("div", "item-actions");
+        ra.appendChild(editBtn(function () { editReq = { name: subj.name, idx: idx }; renameSubj = null; renderSupplicationBank(); }));
+        ra.appendChild(removeBtn(function () { removeRequestAt(subj.name, idx); renderSupplicationBank(); }));
+        li.appendChild(ra);
         list.appendChild(li);
       });
       group.appendChild(list);
@@ -588,17 +679,10 @@
     if (entry.type === "supplication") return entry.subject.name; // back-compat key
     return entry.type + ":" + (entry.item.term || entry.item.title);
   }
-  function isCustomCard(entry) {
-    if (entry.type === "supplication") return isCustomSubject(entry.subject.name);
-    return entry.index >= seed[entry.type];
-  }
   function removeCard(entry) {
     if (entry.type === "supplication") { removeSubject(entry.subject.name); return; }
-    var name = entry.type;
-    banks[name].splice(entry.index, 1);
-    custom[name].splice(entry.index - seed[name], 1);
     if (cards.extras[cardKey(entry)]) { delete cards.extras[cardKey(entry)]; saveCards(); }
-    saveCustom(); resetQueue(name);
+    deleteBankItem(entry.type, entry.index);
   }
 
   function buildScriptureDisplay(scriptures) {
@@ -698,12 +782,11 @@
     var reqSec = el("section", "pc-section");
     reqSec.appendChild(el("h3", "pc-label", "Pray for"));
     var ul = el("ul", "pc-requests");
-    var seedCount = seed.req[subj.name] || 0;
     subj.requests.forEach(function (req, idx) {
       var li = el("li", "pc-request");
       li.appendChild(el("span", "pc-bullet", "•"));
       li.appendChild(el("span", "request-text", req));
-      if (idx >= seedCount) li.appendChild(removeBtn(function () { removeRequestAt(subj.name, idx); renderCards(); }));
+      li.appendChild(removeBtn(function () { removeRequestAt(subj.name, idx); renderCards(); }));
       ul.appendChild(li);
     });
     if (subj.requests.length === 0) ul.appendChild(el("li", "pc-empty", "No requests yet — add one below."));
@@ -746,7 +829,9 @@
     var head = el("header", "pc-head");
     head.appendChild(el("span", "pc-chip pc-chip--" + cat.kind, cat.label));
     head.appendChild(el("h2", "pc-title", entry.type === "supplication" ? entry.subject.name : (entry.item.term || entry.item.title)));
-    if (isCustomCard(entry)) head.appendChild(removeBtn(function () { removeCard(entry); scrEditing = false; renderCards(); }));
+    head.appendChild(removeBtn(function () {
+      if (confirmDelete(entry.type === "supplication" ? entry.subject.name : (entry.item.term || entry.item.title))) { removeCard(entry); scrEditing = false; renderCards(); }
+    }));
     card.appendChild(head);
 
     var body = el("div", "pc-body");
@@ -812,29 +897,19 @@
 
 
   // ===========================================================================
-  // EXPORT (additions + card extras)
+  // EXPORT (full editable content + card extras)
   // ===========================================================================
-  function hasCustom() {
-    return custom.adoration.length || custom.confession.length || custom.thanksgiving.length ||
-      custom.supplication.subjects.length ||
-      Object.keys(custom.supplication.requests).some(function (k) { return custom.supplication.requests[k].length; }) ||
-      Object.keys(cards.extras).length;
-  }
   function exportCard() {
     var card = el("div", "card export-card");
-    card.appendChild(el("h3", "add-title", "Your additions"));
-    if (!hasCustom()) {
-      card.appendChild(el("p", "bank-intro", "Items you add are saved on this device. To make them permanent (and shared across devices), add them then export and send to Claude."));
-      return card;
-    }
-    card.appendChild(el("p", "bank-intro", "Saved on this device. Copy and send to Claude to save them permanently into the app."));
+    card.appendChild(el("h3", "add-title", "Back up / export your plan"));
+    card.appendChild(el("p", "bank-intro", "Your edits are saved on this device. Copy this to back it up, move it to another device, or send to Claude to bake into the app."));
     var ta = el("textarea", "notes-input"); ta.readOnly = true; ta.rows = 4;
-    ta.value = JSON.stringify({ banks: custom, cards: cards.extras }, null, 2);
+    ta.value = JSON.stringify({ content: content, cards: cards.extras }, null, 2);
     card.appendChild(ta);
-    var btn = el("button", "btn btn-primary", "Copy additions"); btn.type = "button";
+    var btn = el("button", "btn btn-primary", "Copy"); btn.type = "button";
     btn.addEventListener("click", function () {
       ta.select();
-      var done = function () { btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = "Copy additions"; }, 1500); };
+      var done = function () { btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = "Copy"; }, 1500); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(ta.value).then(done, function () { try { document.execCommand("copy"); done(); } catch (e) {} });
       } else { try { document.execCommand("copy"); done(); } catch (e) {} }

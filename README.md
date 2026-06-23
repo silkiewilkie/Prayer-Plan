@@ -72,6 +72,18 @@ date it was added — a growing record of God's faithfulness. (Adoration /
 Confession / Thanksgiving cards keep their own *Reflections* and aren't mixed in
 here.)
 
+## Editing in the app (no code)
+
+Open any bank tab — **Adoration, Confession, Thanksgiving, Supplication** — to
+manage its contents. You can **add**, **edit**, or **delete** any item (including
+the originals), and under Supplication you can rename or remove people and edit
+their requests. Prayer Cards can also be deleted from the deck. Everything is
+saved on your device; the bank's **Back up / export** box copies your whole plan
+as JSON (to move devices, keep a backup, or send to Claude to bake in).
+
+Under the hood the content is seeded from `data.js` on first run, then becomes
+your editable copy in the browser (`localStorage`).
+
 ## Adding content in the app (no code)
 
 Each bank has its own **tab** at the top — **Adoration, Confession, Thanksgiving,
