@@ -1,0 +1,272 @@
+/* =============================================================================
+ * Prayer Plan — styling. Mobile-first, single column, print-friendly.
+ * Section accent colors are defined as CSS variables on each card modifier.
+ * ============================================================================= */
+
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --ink: #1f2430;
+  --ink-soft: #5b6275;
+  --line: #e3e6ee;
+  --brand: #3b4a6b;
+  --brand-ink: #ffffff;
+
+  --adoration: #6a4c93;   /* purple  */
+  --confession: #b5546b;  /* rose    */
+  --thanksgiving: #2e8b6f;/* green   */
+  --supplication: #2f6fb0;/* blue    */
+
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(20, 28, 50, 0.08), 0 6px 16px rgba(20, 28, 50, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- header & view tabs --------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--brand);
+  color: var(--brand-ink);
+  padding: 14px 16px 0;
+  box-shadow: var(--shadow);
+}
+
+.site-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.view-tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+.view-tab.is-active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* ---- layout containers ---------------------------------------------------- */
+.view {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.is-hidden { display: none; }
+
+/* ---- day navigation ------------------------------------------------------- */
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.day-pills {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.day-pills::-webkit-scrollbar { display: none; }
+
+.day-pill {
+  appearance: none;
+  flex: 1 0 auto;
+  min-width: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 9px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.day-pill.is-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.day-arrow {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: 1.4rem;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.day-arrow:active { background: var(--bg); }
+
+/* ---- cards ---------------------------------------------------------------- */
+.day-content { display: flex; flex-direction: column; gap: 16px; }
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 5px solid var(--accent, var(--brand));
+  padding: 16px 18px;
+}
+.card--adoration { --accent: var(--adoration); }
+.card--confession { --accent: var(--confession); }
+.card--thanksgiving { --accent: var(--thanksgiving); }
+.card--supplication { --accent: var(--supplication); }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.card-badge {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent, var(--brand));
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.card-heading { display: flex; flex-direction: column; line-height: 1.25; }
+.card-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+.card-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--accent, var(--ink));
+}
+
+/* term + definition */
+.term-block { margin-top: 12px; }
+.term-block:first-of-type { margin-top: 4px; }
+.term-line { margin: 0 0 6px; }
+.term-name { font-weight: 700; }
+.term-def { color: var(--ink-soft); }
+
+/* scripture quote */
+.scripture { margin: 8px 0 0; }
+.scripture-ref {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent, var(--brand));
+  margin-bottom: 2px;
+}
+.scripture-text {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+  color: var(--ink);
+  font-style: italic;
+}
+
+/* supplication list */
+.supplication-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.supplication-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+}
+.supplication-subject { font-weight: 700; white-space: nowrap; }
+.supplication-arrow { color: var(--supplication); font-weight: 700; }
+.supplication-request { color: var(--ink); }
+
+/* ---- attributes view ------------------------------------------------------ */
+.attributes { display: flex; flex-direction: column; gap: 10px; }
+.attribute {
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.attribute-name {
+  display: block;
+  font-weight: 700;
+  color: var(--brand);
+  margin-bottom: 2px;
+}
+.attribute-def { color: var(--ink-soft); }
+
+/* ---- footer --------------------------------------------------------------- */
+.site-footer {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 8px 16px 28px;
+}
+
+/* ---- larger screens ------------------------------------------------------- */
+@media (min-width: 560px) {
+  .site-title { font-size: 1.4rem; }
+  .day-pill { font-size: 0.9rem; }
+  .card-title { font-size: 1.2rem; }
+}
+
+/* ---- print ---------------------------------------------------------------- */
+@media print {
+  .site-header, .day-nav, .site-footer { display: none; }
+  .view { max-width: none; }
+  .card { box-shadow: none; border: 1px solid var(--line); break-inside: avoid; }
+  .is-hidden { display: none !important; }
+}
