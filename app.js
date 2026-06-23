@@ -30,6 +30,8 @@
   var bankContentEl = document.getElementById("bank-content");
   var cardsContentEl = document.getElementById("cards-content");
   var cardCounterEl = document.getElementById("card-counter");
+  var cardFilterEl = document.getElementById("card-filter");
+  var answeredContentEl = document.getElementById("answered-content");
   var prevBtn = document.getElementById("prev-day");
   var nextBtn = document.getElementById("next-day");
   var prevCardBtn = document.getElementById("prev-card");
@@ -38,6 +40,7 @@
   var attributesView = document.getElementById("attributes-view");
   var bankView = document.getElementById("bank-view");
   var cardsView = document.getElementById("cards-view");
+  var answeredView = document.getElementById("answered-view");
   var viewTabs = document.querySelectorAll(".view-tab");
 
   // ---- tiny helpers ---------------------------------------------------------
@@ -471,6 +474,7 @@
   };
   var cardIndex = 0;
   var scrEditing = false;
+  var cardFilter = "all";
 
   // Build the deck fresh each render so bank/subject edits are reflected.
   function buildDeck() {
@@ -479,7 +483,7 @@
     banks.confession.forEach(function (item, i) { deck.push({ type: "confession", index: i, item: item }); });
     banks.thanksgiving.forEach(function (item, i) { deck.push({ type: "thanksgiving", index: i, item: item }); });
     subjects.forEach(function (subj) { deck.push({ type: "supplication", subject: subj }); });
-    return deck;
+    return cardFilter === "all" ? deck : deck.filter(function (e) { return e.type === cardFilter; });
   }
   function cardKey(entry) {
     if (entry.type === "supplication") return entry.subject.name; // back-compat key
@@ -530,7 +534,7 @@
     form.appendChild(inp); form.appendChild(b);
     form.addEventListener("submit", function (e) {
       e.preventDefault(); var v = inp.value.trim(); if (!v) return;
-      ex.answers.push({ text: v, date: todayShort() }); saveCards(); renderCards();
+      ex.answers.push({ text: v, date: todayShort(), ts: Date.now() }); saveCards(); renderCards();
     });
     sec.appendChild(form);
     return sec;
@@ -644,11 +648,13 @@
     if (isCustomCard(entry)) head.appendChild(removeBtn(function () { removeCard(entry); scrEditing = false; renderCards(); }));
     card.appendChild(head);
 
-    if (entry.type === "supplication") renderSupplicationCard(card, entry);
-    else renderActsCard(card, entry);
+    var body = el("div", "pc-body");
+    if (entry.type === "supplication") renderSupplicationCard(body, entry);
+    else renderActsCard(body, entry);
+    card.appendChild(body);
 
     cardsContentEl.appendChild(card);
-    cardsContentEl.appendChild(addCardForm());
+    if (cardFilter === "all" || cardFilter === "supplication") cardsContentEl.appendChild(addCardForm());
     cardsContentEl.appendChild(exportCard());
   }
 
@@ -674,6 +680,49 @@
   }
   prevCardBtn.addEventListener("click", function () { stepCard(-1); });
   nextCardBtn.addEventListener("click", function () { stepCard(1); });
+  if (cardFilterEl) cardFilterEl.addEventListener("change", function () {
+    cardFilter = cardFilterEl.value; cardIndex = 0; scrEditing = false; renderCards();
+  });
+
+  // ===========================================================================
+  // ANSWERED PRAYERS VIEW  (aggregated from Supplication card logs)
+  // ===========================================================================
+  function renderAnswered() {
+    answeredContentEl.innerHTML = "";
+    var entries = [];
+    subjects.forEach(function (subj) {
+      var ex = cards.extras[subj.name];
+      if (!ex || !ex.answers) return;
+      ex.answers.forEach(function (a, idx) {
+        entries.push({ name: subj.name, text: a.text, date: a.date, ts: a.ts || 0, idx: idx });
+      });
+    });
+    entries.sort(function (a, b) { return b.ts - a.ts; });
+
+    answeredContentEl.appendChild(el("p", "bank-intro",
+      "Answers logged on your Supplication prayer cards" + (entries.length ? " · " + entries.length + " recorded" : "") + "."));
+
+    if (entries.length === 0) {
+      var empty = el("div", "card");
+      empty.appendChild(el("p", "pc-empty", "No answered prayers yet. On a Supplication prayer card, log how God answers — they'll gather here as a timeline of His faithfulness."));
+      answeredContentEl.appendChild(empty);
+      return;
+    }
+
+    entries.forEach(function (en) {
+      var row = el("div", "card answered-item");
+      var meta = el("div", "answered-meta");
+      meta.appendChild(el("span", "answered-who", en.name));
+      meta.appendChild(el("span", "answered-date", en.date));
+      row.appendChild(meta);
+      row.appendChild(el("p", "answered-text", en.text));
+      row.appendChild(removeBtn(function () {
+        var ex = cards.extras[en.name];
+        if (ex && ex.answers) { ex.answers.splice(en.idx, 1); saveCards(); renderAnswered(); }
+      }));
+      answeredContentEl.appendChild(row);
+    });
+  }
 
 
   // ===========================================================================
@@ -715,14 +764,17 @@
     var isDay = name === "day";
     var isAttr = name === "attributes";
     var isCards = name === "cards";
-    var isBank = !isDay && !isAttr && !isCards;
+    var isAnswered = name === "answered";
+    var isBank = !isDay && !isAttr && !isCards && !isAnswered;
     dayView.classList.toggle("is-hidden", !isDay);
     attributesView.classList.toggle("is-hidden", !isAttr);
     cardsView.classList.toggle("is-hidden", !isCards);
+    answeredView.classList.toggle("is-hidden", !isAnswered);
     bankView.classList.toggle("is-hidden", !isBank);
     viewTabs.forEach(function (tab) { tab.classList.toggle("is-active", tab.dataset.view === name); });
     if (isBank) renderBank(name);
     if (isCards) { scrEditing = false; renderCards(); }
+    if (isAnswered) renderAnswered();
     window.scrollTo({ top: 0 });
   }
   viewTabs.forEach(function (tab) { tab.addEventListener("click", function () { showView(tab.dataset.view); }); });

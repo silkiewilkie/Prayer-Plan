@@ -37,7 +37,16 @@ Supplication**. Each card shows a category label, a title, and Scripture.
   dated **Answered prayers** log to record how God answers.
 
 Add a new Supplication person/topic at the bottom of the deck; cards you create
-can be removed, and seeded content is protected.
+can be removed, and seeded content is protected. A **Show** dropdown filters the
+deck to **All / Adoration / Confession / Thanksgiving / Supplication**.
+
+## Answered Prayers
+
+The **Answered Prayers** tab gathers every entry you log on a Supplication prayer
+card into one **timeline**, newest first, each tagged with the person and the
+date it was added — a growing record of God's faithfulness. (Adoration /
+Confession / Thanksgiving cards keep their own *Reflections* and aren't mixed in
+here.)
 
 ## Adding content in the app (no code)
 

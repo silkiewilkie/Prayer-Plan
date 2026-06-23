@@ -621,13 +621,32 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   animation: rise 0.32s cubic-bezier(0.21, 0.61, 0.35, 1) both;
-  /* a faint ruled-card feel */
-  background-image: linear-gradient(var(--line-soft) 1px, transparent 1px);
-  background-size: 100% 2.2rem;
-  background-position: 0 72px;
 }
+
+/* Card body sits on a baseline grid so text lines up with the ruled lines.
+   Every line box is one --rule tall and a faint line is drawn at the bottom
+   of each row, so the writing rests on the lines like a real index card. */
+.pc-body {
+  --rule: 1.9rem;
+  background-image: linear-gradient(to bottom, transparent calc(var(--rule) - 1px), var(--line-soft) calc(var(--rule) - 1px));
+  background-size: 100% var(--rule);
+  background-position: 0 0;
+}
+.pc-body p, .pc-body h3, .pc-body figure, .pc-body blockquote,
+.pc-body li, .pc-body span, .pc-body .field-input, .pc-body .btn,
+.pc-body figcaption { line-height: var(--rule); }
+.pc-body .pc-section { display: block; margin: 0 0 var(--rule); }
+.pc-body .pc-section:last-child { margin-bottom: 0; }
+.pc-body p, .pc-body ul, .pc-body figure, .pc-body blockquote, .pc-body h3 { margin-top: 0; margin-bottom: 0; }
+.pc-body .scripture { margin: 0; }
+.pc-body .scripture-text { padding-top: 0; padding-bottom: 0; }
+/* keep form controls close to the grid */
+.pc-body .field-input { padding: 0 12px; min-height: var(--rule); }
+.pc-body .add-request { margin-top: 2px; align-items: center; }
+.pc-body .btn { padding-top: 0; padding-bottom: 0; min-height: var(--rule); }
+.pc-body .pc-btnbar { margin-top: 2px; }
 .prayer-card--adoration { --accent: var(--adoration); }
 .prayer-card--confession { --accent: var(--confession); }
 .prayer-card--thanksgiving { --accent: var(--thanksgiving); }
@@ -706,6 +725,71 @@ body {
 
 .pc-edit { align-self: flex-start; }
 .pc-btnbar { display: flex; gap: 8px; }
+
+/* card type filter */
+.cards-controls { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.filter-field { display: inline-flex; align-items: center; gap: 8px; }
+.filter-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+.filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 34px 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 53%, calc(100% - 13px) 53%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.filter-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+
+/* ---- answered prayers ----------------------------------------------------- */
+#answered-content { display: flex; flex-direction: column; gap: 12px; }
+.answered-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-left: 4px solid var(--thanksgiving);
+  padding: 14px 16px;
+}
+.answered-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.answered-who { font-weight: 700; }
+.answered-date {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--thanksgiving);
+  white-space: nowrap;
+}
+.answered-text {
+  flex-basis: 100%;
+  margin: 6px 0 0;
+  font-family: var(--font-scripture);
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
 
 /* ---- print ---------------------------------------------------------------- */
 @media print {

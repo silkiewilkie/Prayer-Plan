@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <header class="site-header">
@@ -22,6 +22,7 @@
         <button type="button" class="view-tab" data-view="thanksgiving">Thanksgiving</button>
         <button type="button" class="view-tab" data-view="supplication">Supplication</button>
         <button type="button" class="view-tab" data-view="cards">Prayer Cards</button>
+        <button type="button" class="view-tab" data-view="answered">Answered Prayers</button>
         <button type="button" class="view-tab" data-view="attributes">Attributes</button>
       </nav>
     </div>
@@ -45,12 +46,29 @@
 
   <!-- PRAYER CARDS VIEW -->
   <main id="cards-view" class="view is-hidden">
+    <div class="cards-controls">
+      <label class="filter-field">
+        <span class="filter-label">Show</span>
+        <select id="card-filter" class="filter-select">
+          <option value="all">All</option>
+          <option value="adoration">Adoration</option>
+          <option value="confession">Confession</option>
+          <option value="thanksgiving">Thanksgiving</option>
+          <option value="supplication">Supplication</option>
+        </select>
+      </label>
+    </div>
     <nav class="day-nav" aria-label="Flip through prayer cards">
       <button type="button" class="day-arrow" id="prev-card" aria-label="Previous card">&#8249;</button>
       <div class="card-counter" id="card-counter"></div>
       <button type="button" class="day-arrow" id="next-card" aria-label="Next card">&#8250;</button>
     </nav>
     <section id="cards-content"></section>
+  </main>
+
+  <!-- ANSWERED PRAYERS VIEW -->
+  <main id="answered-view" class="view is-hidden">
+    <section id="answered-content"></section>
   </main>
 
   <!-- ATTRIBUTES VIEW -->
@@ -63,7 +81,7 @@
   </footer>
 
   <!-- data.js holds all editable content; app.js renders it. Order matters. -->
-  <script src="data.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="data.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
