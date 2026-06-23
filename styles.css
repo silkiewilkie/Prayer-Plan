@@ -141,6 +141,54 @@
   }
 }
 
+/* ===========================================================================
+ * CELESTIAL NIGHT style — deep indigo, soft starlight, gold. Its own night
+ * atmosphere (largely independent of the light/dark theme).
+ * ========================================================================= */
+:root[data-style="celestial"] {
+  --bg: #0b1026;
+  --bg-elev: #121a38;
+  --surface: #161d3d;
+  --ink: #e9ecfb;
+  --ink-soft: #b3bbe0;
+  --ink-faint: #7d86b3;
+  --line: #2a3358;
+  --line-soft: #1d2547;
+  --brand: #e7c66b;
+  --brand-ink: #0b1026;
+  --adoration: #b79df0;
+  --confession: #f2a3b6;
+  --thanksgiving: #8fe0c0;
+  --supplication: #8fb8f5;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.5), 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* ===========================================================================
+ * LITURGICAL SEASONS style — clean light base; the brand/accent color tracks
+ * the church calendar via data-season (set in JS). Its own light atmosphere.
+ * ========================================================================= */
+:root[data-style="liturgical"] {
+  --bg: #f5f4f1;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --ink: #20232f;
+  --ink-soft: #585d6e;
+  --ink-faint: #8a8f9f;
+  --line: #e7e5df;
+  --line-soft: #f1efea;
+  --brand: #3f7d4f;
+  --brand-ink: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.05);
+  --shadow-md: 0 1px 3px rgba(20, 24, 40, 0.06), 0 10px 28px rgba(20, 24, 40, 0.07);
+}
+:root[data-style="liturgical"][data-season="advent"]   { --brand: #6b4fa0; --brand-ink: #fff; --bg: #f5f2f8; }
+:root[data-style="liturgical"][data-season="christmas"] { --brand: #b5862c; --brand-ink: #fff; --bg: #faf7ef; }
+:root[data-style="liturgical"][data-season="lent"]      { --brand: #5d4a86; --brand-ink: #fff; --bg: #f3f1f6; }
+:root[data-style="liturgical"][data-season="easter"]    { --brand: #c39a1e; --brand-ink: #3a2e00; --bg: #fbfaf2; }
+:root[data-style="liturgical"][data-season="pentecost"] { --brand: #b3402f; --brand-ink: #fff; --bg: #f9f1ef; }
+:root[data-style="liturgical"][data-season="ordinary"]  { --brand: #3f7d4f; --brand-ink: #fff; --bg: #f1f5f1; }
+
 * { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -958,6 +1006,24 @@ body {
   font-family: var(--font-scripture);
   font-size: 1.05rem;
   line-height: 1.5;
+}
+
+/* ---- celestial starfield -------------------------------------------------- */
+:root[data-style="celestial"] body {
+  background-color: #0b1026;
+  background-image:
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 73% 16%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 42% 38%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 88% 44%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 28% 64%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 62% 72%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 9% 84%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 80% 88%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(circle at 78% 12%, rgba(231, 198, 107, 0.18), transparent 22%),
+    linear-gradient(180deg, #0c1130 0%, #0a0e22 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 /* ---- ancient style accents ------------------------------------------------ */

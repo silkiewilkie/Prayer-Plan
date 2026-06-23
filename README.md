@@ -16,10 +16,16 @@ through today's plan as a focused **deck of prayer cards**. Both are saved
 privately in your browser.
 
 A **Settings** tab holds the appearance controls — **Theme** (System / Light /
-Dark) and **Style** (Modern, the default, or **Ancient**: a warm parchment,
-inscriptional, manuscript feel) — plus an **Add a prayer card** form for adding a
-new Supplication person/topic. Your choices override the device setting and are
-remembered; Style works in both light and dark.
+Dark) and **Style** — plus an **Add a prayer card** form. Styles:
+
+- **Modern** (default) — clean and minimal.
+- **Ancient** — warm parchment, jewel tones, inscriptional Cinzel headings.
+- **Celestial Night** — a deep indigo, starlit theme with soft gold.
+- **Liturgical Seasons** — the accent color follows the church calendar
+  automatically (Advent/Lent violet, Christmas/Easter gold, Pentecost red,
+  Ordinary Time green), computed from the date (Western/Roman calendar).
+
+Your choices are remembered and applied before paint (no flash).
 
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.

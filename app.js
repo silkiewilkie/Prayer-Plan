@@ -914,19 +914,58 @@
       try { localStorage.removeItem(THEME_KEY); } catch (e) {}
     }
   }
+  var STYLES = ["ancient", "celestial", "liturgical"];
   function currentStyleChoice() {
-    try { if (localStorage.getItem(STYLE_KEY) === "ancient") return "ancient"; } catch (e) {}
+    try { var s = localStorage.getItem(STYLE_KEY); if (STYLES.indexOf(s) > -1) return s; } catch (e) {}
     return "modern";
   }
   function applyStyleChoice(choice) {
     var root = document.documentElement;
-    if (choice === "ancient") {
-      root.setAttribute("data-style", "ancient");
-      try { localStorage.setItem(STYLE_KEY, "ancient"); } catch (e) {}
+    if (STYLES.indexOf(choice) > -1) {
+      root.setAttribute("data-style", choice);
+      try { localStorage.setItem(STYLE_KEY, choice); } catch (e) {}
     } else {
       if (root.removeAttribute) root.removeAttribute("data-style");
       try { localStorage.removeItem(STYLE_KEY); } catch (e) {}
     }
+    if (choice === "liturgical") root.setAttribute("data-season", liturgicalSeason(new Date()));
+    else if (root.removeAttribute) root.removeAttribute("data-season");
+  }
+
+  // ---- liturgical calendar (Western/Roman) ----------------------------------
+  function ymd(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return ymd(r); }
+  function gregorianEaster(y) { // Anonymous Gregorian (Meeus/Jones/Butcher)
+    var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
+      f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3),
+      h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+      l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+      month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(y, month - 1, day);
+  }
+  function adventSunday(y) { // first Sunday of Advent: Sunday nearest Nov 30
+    var d = new Date(y, 10, 30), dow = d.getDay();
+    return addDays(d, dow <= 3 ? -dow : 7 - dow);
+  }
+  function liturgicalSeason(t) {
+    var day = ymd(t), Y = day.getFullYear();
+    var easter = ymd(gregorianEaster(Y));
+    var ashWed = addDays(easter, -46);
+    var pentecost = addDays(easter, 49);
+    var advent1 = adventSunday(Y);
+    var christmas = new Date(Y, 11, 25);
+    var epiphany = new Date(Y, 0, 6);
+    if (day <= epiphany) return "christmas";           // Jan 1–6 (Christmas carries over)
+    if (day >= ashWed && day < easter) return "lent";
+    if (day.getTime() === pentecost.getTime()) return "pentecost";
+    if (day >= easter && day < pentecost) return "easter";
+    if (day >= advent1 && day < christmas) return "advent";
+    if (day >= christmas) return "christmas";           // Dec 25–31
+    return "ordinary";
+  }
+  function seasonLabel(s) {
+    return { advent: "Advent", christmas: "Christmas", lent: "Lent", easter: "Easter",
+      pentecost: "Pentecost", ordinary: "Ordinary Time" }[s] || "Ordinary Time";
   }
 
   function renderSettings() {
@@ -949,17 +988,20 @@
 
     var styleRow = el("div", "setting-row");
     styleRow.appendChild(el("span", "setting-label", "Style"));
-    var styleSeg = el("div", "seg");
-    [["modern", "Modern"], ["ancient", "Ancient"]].forEach(function (o) {
-      var b = el("button", "seg-btn" + (currentStyleChoice() === o[0] ? " is-active" : ""), o[1]);
-      b.type = "button";
-      b.addEventListener("click", function () { applyStyleChoice(o[0]); renderSettings(); });
-      styleSeg.appendChild(b);
+    var styleSel = el("select", "filter-select");
+    [["modern", "Modern"], ["ancient", "Ancient"], ["celestial", "Celestial Night"], ["liturgical", "Liturgical Seasons"]].forEach(function (o) {
+      var opt = document.createElement("option");
+      opt.value = o[0]; opt.textContent = o[1];
+      if (currentStyleChoice() === o[0]) opt.selected = true;
+      styleSel.appendChild(opt);
     });
-    styleRow.appendChild(styleSeg);
+    styleSel.addEventListener("change", function () { applyStyleChoice(styleSel.value); renderSettings(); });
+    styleRow.appendChild(styleSel);
     appear.appendChild(styleRow);
 
-    appear.appendChild(el("p", "bank-intro", "“System” follows your device's light/dark setting. “Ancient” gives a warm, parchment, manuscript feel."));
+    var hint = "“System” follows your device's light/dark setting. Ancient is warm parchment; Celestial Night is a starlit theme; Liturgical Seasons follows the church calendar.";
+    if (currentStyleChoice() === "liturgical") hint = "Liturgical color for today: " + seasonLabel(liturgicalSeason(new Date())) + ". The palette changes with the church calendar.";
+    appear.appendChild(el("p", "bank-intro", hint));
     settingsContentEl.appendChild(appear);
 
     // Add a prayer card
@@ -981,5 +1023,6 @@
   }
 
   // ---- go -------------------------------------------------------------------
+  applyStyleChoice(currentStyleChoice()); // ensures liturgical season is set on load
   renderDay(todayKey);
 })();
