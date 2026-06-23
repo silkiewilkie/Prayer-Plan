@@ -41,6 +41,8 @@
   var bankView = document.getElementById("bank-view");
   var cardsView = document.getElementById("cards-view");
   var answeredView = document.getElementById("answered-view");
+  var modeListBtn = document.getElementById("mode-list");
+  var modeCardsBtn = document.getElementById("mode-cards");
   var viewTabs = document.querySelectorAll(".view-tab");
 
   // ---- tiny helpers ---------------------------------------------------------
@@ -229,6 +231,11 @@
   var todayKey = ensureToday();
   var viewKey = todayKey;
 
+  var TODAY_MODE_KEY = "prayerPlan.todayMode";
+  var todayMode = "list";
+  try { var m = localStorage.getItem(TODAY_MODE_KEY); if (m === "cards" || m === "list") todayMode = m; } catch (e) {}
+  var dayCardIndex = 0;
+
   function journalFor(key) {
     if (!state.journal[key]) state.journal[key] = { checks: {}, notes: "" };
     return state.journal[key];
@@ -288,7 +295,17 @@
     if (key === todayKey) top.appendChild(el("span", "today-badge", "Today"));
     headingEl.appendChild(top);
     headingEl.appendChild(el("span", "day-date", plan.label));
+    updateModeToggle();
     contentEl.innerHTML = "";
+    if (todayMode === "cards") renderDayCards(plan);
+    else renderDayList(plan, key);
+    var pos = state.order.indexOf(key);
+    prevBtn.disabled = pos <= 0;
+    nextBtn.disabled = pos >= state.order.length - 1;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function renderDayList(plan, key) {
     var a = buildCard("adoration", "A", "adoration", "Adoration",
       plan.adoration.map(function (x) { return x.term; }).join(" · "));
     appendTermItems(a, plan.adoration); contentEl.appendChild(a);
@@ -309,11 +326,86 @@
     });
     s.appendChild(list); contentEl.appendChild(s);
     contentEl.appendChild(buildNotesCard(key));
-    var pos = state.order.indexOf(key);
-    prevBtn.disabled = pos <= 0;
-    nextBtn.disabled = pos >= state.order.length - 1;
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  // Today's plan as a flip-through deck of prayer cards.
+  function todayDeck(plan) {
+    var d = [];
+    plan.adoration.forEach(function (it) { d.push({ type: "adoration", item: it }); });
+    plan.confession.forEach(function (it) { d.push({ type: "confession", item: it }); });
+    plan.thanksgiving.forEach(function (it) { d.push({ type: "thanksgiving", item: it }); });
+    plan.supplication.forEach(function (s) { d.push({ type: "supplication", supp: s }); });
+    return d;
+  }
+
+  function buildTodayCard(entry) {
+    var cat = CARD_CAT[entry.type];
+    var card = el("article", "prayer-card prayer-card--" + cat.kind);
+    var head = el("header", "pc-head");
+    head.appendChild(el("span", "pc-chip pc-chip--" + cat.kind, cat.label));
+    var title = entry.type === "supplication" ? entry.supp.name : (entry.item.term || entry.item.title);
+    head.appendChild(el("h2", "pc-title", title));
+    card.appendChild(head);
+    var body = el("div", "pc-body");
+    if (entry.type === "supplication") {
+      var ex = cards.extras[entry.supp.name];
+      if (ex && ex.scripture && (ex.scripture.ref || ex.scripture.text)) body.appendChild(buildScriptureDisplay([ex.scripture]));
+      var reqSec = el("section", "pc-section");
+      reqSec.appendChild(el("h3", "pc-label", "Pray for"));
+      var ul = el("ul", "pc-requests");
+      var li = el("li", "pc-request");
+      li.appendChild(el("span", "pc-bullet", "•"));
+      li.appendChild(el("span", "request-text", entry.supp.request || "—"));
+      ul.appendChild(li); reqSec.appendChild(ul); body.appendChild(reqSec);
+    } else {
+      if (entry.item.definition) {
+        var d = el("section", "pc-section");
+        d.appendChild(el("p", "pc-def", entry.item.definition));
+        body.appendChild(d);
+      }
+      var scrips = entry.type === "thanksgiving" ? (entry.item.scriptures || []) : (entry.item.scripture ? [entry.item.scripture] : []);
+      if (scrips.length) body.appendChild(buildScriptureDisplay(scrips));
+    }
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderDayCards(plan) {
+    var deck = todayDeck(plan);
+    if (dayCardIndex < 0) dayCardIndex = 0;
+    if (dayCardIndex > deck.length - 1) dayCardIndex = Math.max(0, deck.length - 1);
+    if (deck.length === 0) { contentEl.appendChild(el("p", "bank-intro", "No prayer points today.")); return; }
+    var nav = el("nav", "day-nav today-card-nav");
+    var prev = el("button", "day-arrow", "‹"); prev.type = "button"; prev.setAttribute("aria-label", "Previous card");
+    var counter = el("div", "card-counter", (dayCardIndex + 1) + " / " + deck.length);
+    var next = el("button", "day-arrow", "›"); next.type = "button"; next.setAttribute("aria-label", "Next card");
+    var single = deck.length <= 1;
+    prev.disabled = single; next.disabled = single;
+    prev.addEventListener("click", function () { stepDayCard(-1); });
+    next.addEventListener("click", function () { stepDayCard(1); });
+    nav.appendChild(prev); nav.appendChild(counter); nav.appendChild(next);
+    contentEl.appendChild(nav);
+    contentEl.appendChild(buildTodayCard(deck[dayCardIndex]));
+  }
+
+  function stepDayCard(delta) {
+    var len = todayDeck(state.history[viewKey]).length;
+    if (len === 0) return;
+    dayCardIndex = ((dayCardIndex + delta) % len + len) % len; // wrap around
+    renderDay(viewKey);
+  }
+
+  function setTodayMode(mode) {
+    todayMode = mode; dayCardIndex = 0;
+    try { localStorage.setItem(TODAY_MODE_KEY, mode); } catch (e) {}
+    renderDay(viewKey);
+  }
+  function updateModeToggle() {
+    if (modeListBtn) modeListBtn.classList.toggle("is-active", todayMode === "list");
+    if (modeCardsBtn) modeCardsBtn.classList.toggle("is-active", todayMode === "cards");
+  }
+  if (modeListBtn) modeListBtn.addEventListener("click", function () { setTodayMode("list"); });
+  if (modeCardsBtn) modeCardsBtn.addEventListener("click", function () { setTodayMode("cards"); });
 
   function buildNotesCard(key) {
     var jr = journalFor(key);
@@ -338,7 +430,7 @@
   function step(delta) {
     var pos = state.order.indexOf(viewKey);
     var next = pos + delta;
-    if (next >= 0 && next < state.order.length) renderDay(state.order[next]);
+    if (next >= 0 && next < state.order.length) { dayCardIndex = 0; renderDay(state.order[next]); }
   }
   prevBtn.addEventListener("click", function () { step(-1); });
   nextBtn.addEventListener("click", function () { step(1); });
@@ -801,8 +893,10 @@
     var dy = e.changedTouches[0].clientY - touchY;
     var horizontal = Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5;
     if (horizontal) {
-      if (!dayView.classList.contains("is-hidden")) step(dx < 0 ? 1 : -1);
-      else if (!cardsView.classList.contains("is-hidden")) stepCard(dx < 0 ? 1 : -1);
+      if (!dayView.classList.contains("is-hidden")) {
+        if (todayMode === "cards") stepDayCard(dx < 0 ? 1 : -1);
+        else step(dx < 0 ? 1 : -1);
+      } else if (!cardsView.classList.contains("is-hidden")) stepCard(dx < 0 ? 1 : -1);
     }
     touchX = touchY = null;
   }, { passive: true });

@@ -10,8 +10,10 @@ Instead of a fixed week, the app keeps a **bank** of items for each section and
 reshuffling. Today's draw is locked in (reopening shows the same plan), and you
 can swipe or use the ‹ › arrows to **re-read previous days**.
 
-You can also **check off** each section as you pray it and jot **notes** for the
-day — both saved privately in your browser.
+On the Today tab, a **List / Cards** toggle lets you read the day as the full
+list — where you can **check off** each section and jot **notes** — or flip
+through today's plan as a focused **deck of prayer cards**. Both are saved
+privately in your browser.
 
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.

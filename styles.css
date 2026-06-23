@@ -251,6 +251,39 @@ body {
   border-radius: 999px;
 }
 
+/* ---- today view-mode toggle (List / Cards) -------------------------------- */
+.today-mode {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+  margin: 0 auto 18px;
+  width: -moz-fit-content;
+  width: fit-content;
+  background: var(--line-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.mode-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.mode-btn.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.today-card-nav { margin-top: 2px; }
+
 /* ---- cards ---------------------------------------------------------------- */
 .day-content { display: flex; flex-direction: column; gap: 14px; }
 
