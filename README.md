@@ -23,18 +23,21 @@ JavaScript.
 
 ## Prayer Cards
 
-The **Prayer Cards** tab is inspired by Paul Miller's *A Praying Life*. Each
-person/area from your Supplication list becomes an index card you **flip through
-one at a time** (arrows or swipe). A card holds:
+The **Prayer Cards** tab is inspired by Paul Miller's *A Praying Life*. The whole
+**ACTS** plan becomes a deck of index cards you **flip through one at a time**
+(arrows or swipe), grouped **Adoration → Confession → Thanksgiving →
+Supplication**. Each card shows a category label, a title, and Scripture.
 
-- **Pray this** — a Scripture you're praying over that person (add/edit it).
-- **Pray for** — their specific requests. These stay **in sync** with the
-  Supplication bank: add or remove here and it updates there too.
-- **Answered prayers** — a dated log to record how God answers, building faith
-  over time.
+- **Adoration / Confession / Thanksgiving cards** (one per item in those banks)
+  show the definition/theme, the Scripture to **pray this**, and a dated
+  **Reflections** log. An *Edit in … bank* button jumps to that bank to change
+  the content. New items you add in a bank tab automatically appear in the deck.
+- **Supplication cards** (one per person/area) add a Scripture to **pray over**
+  them, their **requests** (kept in sync with the Supplication bank), and a
+  dated **Answered prayers** log to record how God answers.
 
-Add a brand-new card (person or topic) at the bottom of the deck; cards you
-create can be removed, and the seeded people/requests are protected.
+Add a new Supplication person/topic at the bottom of the deck; cards you create
+can be removed, and seeded content is protected.
 
 ## Adding content in the app (no code)
 

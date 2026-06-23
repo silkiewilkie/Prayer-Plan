@@ -613,6 +613,7 @@ body {
 }
 
 .prayer-card {
+  --accent: var(--brand);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -625,15 +626,29 @@ body {
   /* a faint ruled-card feel */
   background-image: linear-gradient(var(--line-soft) 1px, transparent 1px);
   background-size: 100% 2.2rem;
-  background-position: 0 64px;
+  background-position: 0 72px;
 }
+.prayer-card--adoration { --accent: var(--adoration); }
+.prayer-card--confession { --accent: var(--confession); }
+.prayer-card--thanksgiving { --accent: var(--thanksgiving); }
+.prayer-card--supplication { --accent: var(--supplication); }
 
 .pc-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   padding-bottom: 12px;
-  border-bottom: 2px solid var(--brand);
+  border-bottom: 2px solid var(--accent);
+}
+.pc-chip {
+  order: -1;
+  flex-basis: 100%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
 }
 .pc-title {
   margin: 0;
@@ -641,7 +656,13 @@ body {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--brand);
+  color: var(--accent);
+}
+.pc-def {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+  line-height: 1.55;
 }
 
 .pc-section { display: flex; flex-direction: column; gap: 8px; }
@@ -654,7 +675,9 @@ body {
   color: var(--ink-faint);
 }
 
-.pc-scripture { margin: 0; border-left-color: var(--brand); }
+.pc-scripture { margin: 0; }
+.prayer-card .scripture-ref { color: var(--accent); }
+.prayer-card .scripture-text { border-left-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .pc-empty { margin: 0; color: var(--ink-faint); font-style: italic; font-size: 0.92rem; }
 
 .pc-requests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

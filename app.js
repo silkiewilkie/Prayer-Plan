@@ -461,38 +461,102 @@
   }
 
   // ===========================================================================
-  // PRAYER CARDS VIEW  (flip through one card at a time)
+  // PRAYER CARDS VIEW  (flip through one card at a time, grouped by ACTS)
   // ===========================================================================
+  var CARD_CAT = {
+    adoration: { label: "Adoration", kind: "adoration" },
+    confession: { label: "Confession", kind: "confession" },
+    thanksgiving: { label: "Thanksgiving", kind: "thanksgiving" },
+    supplication: { label: "Supplication", kind: "supplication" }
+  };
   var cardIndex = 0;
   var scrEditing = false;
 
-  function renderCards() {
-    if (cardIndex < 0) cardIndex = 0;
-    if (cardIndex > subjects.length - 1) cardIndex = Math.max(0, subjects.length - 1);
-    cardsContentEl.innerHTML = "";
+  // Build the deck fresh each render so bank/subject edits are reflected.
+  function buildDeck() {
+    var deck = [];
+    banks.adoration.forEach(function (item, i) { deck.push({ type: "adoration", index: i, item: item }); });
+    banks.confession.forEach(function (item, i) { deck.push({ type: "confession", index: i, item: item }); });
+    banks.thanksgiving.forEach(function (item, i) { deck.push({ type: "thanksgiving", index: i, item: item }); });
+    subjects.forEach(function (subj) { deck.push({ type: "supplication", subject: subj }); });
+    return deck;
+  }
+  function cardKey(entry) {
+    if (entry.type === "supplication") return entry.subject.name; // back-compat key
+    return entry.type + ":" + (entry.item.term || entry.item.title);
+  }
+  function isCustomCard(entry) {
+    if (entry.type === "supplication") return isCustomSubject(entry.subject.name);
+    return entry.index >= seed[entry.type];
+  }
+  function removeCard(entry) {
+    if (entry.type === "supplication") { removeSubject(entry.subject.name); return; }
+    var name = entry.type;
+    banks[name].splice(entry.index, 1);
+    custom[name].splice(entry.index - seed[name], 1);
+    if (cards.extras[cardKey(entry)]) { delete cards.extras[cardKey(entry)]; saveCards(); }
+    saveCustom(); resetQueue(name);
+  }
 
-    if (subjects.length === 0) {
-      cardCounterEl.textContent = "No cards";
-      prevCardBtn.disabled = true; nextCardBtn.disabled = true;
-      cardsContentEl.appendChild(addCardForm());
-      return;
+  function buildScriptureDisplay(scriptures) {
+    var sec = el("section", "pc-section");
+    sec.appendChild(el("h3", "pc-label", "Pray this"));
+    scriptures.forEach(function (s) {
+      var fig = el("figure", "scripture pc-scripture");
+      if (s.ref) fig.appendChild(el("figcaption", "scripture-ref", s.ref));
+      if (s.text) fig.appendChild(el("blockquote", "scripture-text", s.text));
+      sec.appendChild(fig);
+    });
+    return sec;
+  }
+
+  // dated log used for "Answered prayers" (supplication) and "Reflections" (ACTS)
+  function buildLogSection(key, label, placeholder, emptyText) {
+    var ex = extrasFor(key);
+    var sec = el("section", "pc-section");
+    sec.appendChild(el("h3", "pc-label", label));
+    var ul = el("ul", "pc-answers");
+    if (ex.answers.length === 0) ul.appendChild(el("li", "pc-empty", emptyText));
+    ex.answers.forEach(function (a, idx) {
+      var li = el("li", "pc-answer");
+      li.appendChild(el("span", "pc-answer-date", a.date));
+      li.appendChild(el("span", "pc-answer-text", a.text));
+      li.appendChild(removeBtn(function () { ex.answers.splice(idx, 1); saveCards(); renderCards(); }));
+      ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+    var form = el("form", "add-request");
+    var inp = textInput(placeholder); var b = el("button", "btn btn-small", "Add"); b.type = "submit";
+    form.appendChild(inp); form.appendChild(b);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault(); var v = inp.value.trim(); if (!v) return;
+      ex.answers.push({ text: v, date: todayShort() }); saveCards(); renderCards();
+    });
+    sec.appendChild(form);
+    return sec;
+  }
+
+  function renderActsCard(card, entry) {
+    var item = entry.item;
+    if (item.definition) {
+      var d = el("section", "pc-section");
+      d.appendChild(el("p", "pc-def", item.definition));
+      card.appendChild(d);
     }
+    var scrips = entry.type === "thanksgiving" ? (item.scriptures || []) : (item.scripture ? [item.scripture] : []);
+    if (scrips.length) card.appendChild(buildScriptureDisplay(scrips));
+    card.appendChild(buildLogSection(cardKey(entry), "Reflections", "Add a reflection or prayer", "No reflections yet — jot what God shows you."));
+    var editBar = el("section", "pc-section");
+    var eb = el("button", "btn btn-small pc-edit", "Edit in " + CARD_CAT[entry.type].label + " bank"); eb.type = "button";
+    eb.addEventListener("click", function () { showView(entry.type); });
+    editBar.appendChild(eb);
+    card.appendChild(editBar);
+  }
 
-    var subj = subjects[cardIndex];
+  function renderSupplicationCard(card, entry) {
+    var subj = entry.subject;
     var ex = extrasFor(subj.name);
-    cardCounterEl.textContent = (cardIndex + 1) + " / " + subjects.length;
-    prevCardBtn.disabled = cardIndex <= 0;
-    nextCardBtn.disabled = cardIndex >= subjects.length - 1;
 
-    var card = el("article", "prayer-card");
-    var head = el("header", "pc-head");
-    head.appendChild(el("h2", "pc-title", subj.name));
-    if (isCustomSubject(subj.name)) head.appendChild(removeBtn(function () {
-      removeSubject(subj.name); scrEditing = false; renderCards();
-    }));
-    card.appendChild(head);
-
-    // --- Pray this (Scripture) ---
     var scrSec = el("section", "pc-section");
     scrSec.appendChild(el("h3", "pc-label", "Pray this"));
     if (scrEditing) {
@@ -528,7 +592,6 @@
     }
     card.appendChild(scrSec);
 
-    // --- Pray for (requests, synced with Supplication) ---
     var reqSec = el("section", "pc-section");
     reqSec.appendChild(el("h3", "pc-label", "Pray for"));
     var ul = el("ul", "pc-requests");
@@ -552,28 +615,37 @@
     reqSec.appendChild(rform);
     card.appendChild(reqSec);
 
-    // --- Answered prayers ---
-    var ansSec = el("section", "pc-section");
-    ansSec.appendChild(el("h3", "pc-label", "Answered prayers"));
-    var al = el("ul", "pc-answers");
-    if (ex.answers.length === 0) al.appendChild(el("li", "pc-empty", "None logged yet — record how God answers to build faith."));
-    ex.answers.forEach(function (a, idx) {
-      var li = el("li", "pc-answer");
-      li.appendChild(el("span", "pc-answer-date", a.date));
-      li.appendChild(el("span", "pc-answer-text", a.text));
-      li.appendChild(removeBtn(function () { ex.answers.splice(idx, 1); saveCards(); renderCards(); }));
-      al.appendChild(li);
-    });
-    ansSec.appendChild(al);
-    var aform = el("form", "add-request");
-    var ain = textInput("Log an answered prayer"); var ab = el("button", "btn btn-small", "Add"); ab.type = "submit";
-    aform.appendChild(ain); aform.appendChild(ab);
-    aform.addEventListener("submit", function (e) {
-      e.preventDefault(); var v = ain.value.trim(); if (!v) return;
-      ex.answers.push({ text: v, date: todayShort() }); saveCards(); renderCards();
-    });
-    ansSec.appendChild(aform);
-    card.appendChild(ansSec);
+    card.appendChild(buildLogSection(subj.name, "Answered prayers", "Log an answered prayer", "None logged yet — record how God answers to build faith."));
+  }
+
+  function renderCards() {
+    var deck = buildDeck();
+    if (cardIndex < 0) cardIndex = 0;
+    if (cardIndex > deck.length - 1) cardIndex = Math.max(0, deck.length - 1);
+    cardsContentEl.innerHTML = "";
+
+    if (deck.length === 0) {
+      cardCounterEl.textContent = "No cards";
+      prevCardBtn.disabled = true; nextCardBtn.disabled = true;
+      cardsContentEl.appendChild(addCardForm());
+      return;
+    }
+
+    var entry = deck[cardIndex];
+    var cat = CARD_CAT[entry.type];
+    cardCounterEl.textContent = (cardIndex + 1) + " / " + deck.length;
+    prevCardBtn.disabled = cardIndex <= 0;
+    nextCardBtn.disabled = cardIndex >= deck.length - 1;
+
+    var card = el("article", "prayer-card prayer-card--" + cat.kind);
+    var head = el("header", "pc-head");
+    head.appendChild(el("span", "pc-chip pc-chip--" + cat.kind, cat.label));
+    head.appendChild(el("h2", "pc-title", entry.type === "supplication" ? entry.subject.name : (entry.item.term || entry.item.title)));
+    if (isCustomCard(entry)) head.appendChild(removeBtn(function () { removeCard(entry); scrEditing = false; renderCards(); }));
+    card.appendChild(head);
+
+    if (entry.type === "supplication") renderSupplicationCard(card, entry);
+    else renderActsCard(card, entry);
 
     cardsContentEl.appendChild(card);
     cardsContentEl.appendChild(addCardForm());
@@ -583,23 +655,26 @@
   function addCardForm() {
     var form = el("form", "card add-form");
     form.appendChild(el("h3", "add-title", "Add a prayer card"));
+    form.appendChild(el("p", "bank-intro", "Adds a person/topic to Supplication. Add Adoration, Confession, or Thanksgiving cards from their own tabs."));
     var nin = textInput("Name or topic (e.g. Neighbor, Work)");
     form.appendChild(labeledInput("Name / topic", nin));
     var nb = el("button", "btn btn-primary", "Add card"); nb.type = "submit"; form.appendChild(nb);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      if (addSubject(nin.value.trim())) { cardIndex = subjects.length - 1; scrEditing = false; renderCards(); }
+      if (addSubject(nin.value.trim())) { cardIndex = 1e9; scrEditing = false; renderCards(); }
       else nin.focus();
     });
     return form;
   }
 
   function stepCard(delta) {
+    var len = buildDeck().length;
     var next = cardIndex + delta;
-    if (next >= 0 && next < subjects.length) { cardIndex = next; scrEditing = false; renderCards(); }
+    if (next >= 0 && next < len) { cardIndex = next; scrEditing = false; renderCards(); }
   }
   prevCardBtn.addEventListener("click", function () { stepCard(-1); });
   nextCardBtn.addEventListener("click", function () { stepCard(1); });
+
 
   // ===========================================================================
   // EXPORT (additions + card extras)
