@@ -18,13 +18,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
   <header class="site-header">
     <div class="site-header-inner">
       <h1 class="site-title">Personal Prayer Plan</h1>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode"></button>
       <nav class="view-tabs" aria-label="Views" role="tablist">
         <button type="button" class="view-tab is-active" data-view="day">Today</button>
         <button type="button" class="view-tab" data-view="adoration">Adoration</button>
@@ -34,6 +33,7 @@
         <button type="button" class="view-tab" data-view="cards">Prayer Cards</button>
         <button type="button" class="view-tab" data-view="answered">Answered Prayers</button>
         <button type="button" class="view-tab" data-view="attributes">Attributes</button>
+        <button type="button" class="view-tab" data-view="settings">Settings</button>
       </nav>
     </div>
   </header>
@@ -91,12 +91,17 @@
     <section class="attributes" id="attributes-content"></section>
   </main>
 
+  <!-- SETTINGS VIEW -->
+  <main id="settings-view" class="view is-hidden">
+    <section id="settings-content"></section>
+  </main>
+
   <footer class="site-footer">
     <p>“Pray without ceasing.” &mdash; 1 Thessalonians 5:17</p>
   </footer>
 
   <!-- data.js holds all editable content; app.js renders it. Order matters. -->
-  <script src="data.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="data.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

@@ -15,8 +15,9 @@ list — where you can **check off** each section and jot **notes** — or flip
 through today's plan as a focused **deck of prayer cards**. Both are saved
 privately in your browser.
 
-A sun/moon button in the header toggles **light / dark mode** (it overrides your
-device setting and is remembered); without a choice it follows your system theme.
+A **Settings** tab holds the **theme** control (System / Light / Dark — your
+choice overrides the device setting and is remembered) and an **Add a prayer
+card** form for adding a new Supplication person/topic.
 
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.

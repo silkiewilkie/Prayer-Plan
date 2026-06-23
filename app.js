@@ -41,6 +41,8 @@
   var bankView = document.getElementById("bank-view");
   var cardsView = document.getElementById("cards-view");
   var answeredView = document.getElementById("answered-view");
+  var settingsView = document.getElementById("settings-view");
+  var settingsContentEl = document.getElementById("settings-content");
   var modeListBtn = document.getElementById("mode-list");
   var modeCardsBtn = document.getElementById("mode-cards");
   var viewTabs = document.querySelectorAll(".view-tab");
@@ -728,7 +730,7 @@
     if (deck.length === 0) {
       cardCounterEl.textContent = "No cards";
       prevCardBtn.disabled = true; nextCardBtn.disabled = true;
-      cardsContentEl.appendChild(addCardForm());
+      cardsContentEl.appendChild(el("p", "bank-intro", "No cards to show. Add one from the Settings tab."));
       return;
     }
 
@@ -753,23 +755,7 @@
     card.appendChild(body);
 
     cardsContentEl.appendChild(card);
-    if (cardFilter === "all" || cardFilter === "supplication") cardsContentEl.appendChild(addCardForm());
     cardsContentEl.appendChild(exportCard());
-  }
-
-  function addCardForm() {
-    var form = el("form", "card add-form");
-    form.appendChild(el("h3", "add-title", "Add a prayer card"));
-    form.appendChild(el("p", "bank-intro", "Adds a person/topic to Supplication. Add Adoration, Confession, or Thanksgiving cards from their own tabs."));
-    var nin = textInput("Name or topic (e.g. Neighbor, Work)");
-    form.appendChild(labeledInput("Name / topic", nin));
-    var nb = el("button", "btn btn-primary", "Add card"); nb.type = "submit"; form.appendChild(nb);
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      if (addSubject(nin.value.trim())) { cardIndex = 1e9; scrEditing = false; renderCards(); }
-      else nin.focus();
-    });
-    return form;
   }
 
   function stepCard(delta) {
@@ -865,16 +851,19 @@
     var isAttr = name === "attributes";
     var isCards = name === "cards";
     var isAnswered = name === "answered";
-    var isBank = !isDay && !isAttr && !isCards && !isAnswered;
+    var isSettings = name === "settings";
+    var isBank = !isDay && !isAttr && !isCards && !isAnswered && !isSettings;
     dayView.classList.toggle("is-hidden", !isDay);
     attributesView.classList.toggle("is-hidden", !isAttr);
     cardsView.classList.toggle("is-hidden", !isCards);
     answeredView.classList.toggle("is-hidden", !isAnswered);
+    settingsView.classList.toggle("is-hidden", !isSettings);
     bankView.classList.toggle("is-hidden", !isBank);
     viewTabs.forEach(function (tab) { tab.classList.toggle("is-active", tab.dataset.view === name); });
     if (isBank) renderBank(name);
     if (isCards) { scrEditing = false; renderCards(); }
     if (isAnswered) renderAnswered();
+    if (isSettings) renderSettings();
     window.scrollTo({ top: 0 });
   }
   viewTabs.forEach(function (tab) { tab.addEventListener("click", function () { showView(tab.dataset.view); }); });
@@ -906,30 +895,61 @@
     touchX = touchY = null;
   }, { passive: true });
 
-  // ---- theme (light / dark) toggle ------------------------------------------
+  // ===========================================================================
+  // SETTINGS VIEW
+  // ===========================================================================
   var THEME_KEY = "prayerPlan.theme";
-  var themeBtn = document.getElementById("theme-toggle");
-  var SUN = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>';
-  var MOON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
-  function effectiveTheme() {
-    var attr = document.documentElement.getAttribute("data-theme");
-    if (attr === "dark" || attr === "light") return attr;
-    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  function currentThemeChoice() {
+    try { var t = localStorage.getItem(THEME_KEY); if (t === "light" || t === "dark") return t; } catch (e) {}
+    return "system";
   }
-  function paintTheme() {
-    if (!themeBtn) return;
-    var dark = effectiveTheme() === "dark";
-    themeBtn.innerHTML = dark ? SUN : MOON;
-    themeBtn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+  function applyThemeChoice(choice) {
+    var root = document.documentElement;
+    if (choice === "light" || choice === "dark") {
+      root.setAttribute("data-theme", choice);
+      try { localStorage.setItem(THEME_KEY, choice); } catch (e) {}
+    } else {
+      if (root.removeAttribute) root.removeAttribute("data-theme");
+      try { localStorage.removeItem(THEME_KEY); } catch (e) {}
+    }
   }
-  if (themeBtn) {
-    themeBtn.addEventListener("click", function () {
-      var next = effectiveTheme() === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-      paintTheme();
+
+  function renderSettings() {
+    settingsContentEl.innerHTML = "";
+
+    // Appearance — theme
+    var appear = el("div", "card settings-card");
+    appear.appendChild(el("h3", "add-title", "Appearance"));
+    var row = el("div", "setting-row");
+    row.appendChild(el("span", "setting-label", "Theme"));
+    var seg = el("div", "seg");
+    [["system", "System"], ["light", "Light"], ["dark", "Dark"]].forEach(function (o) {
+      var b = el("button", "seg-btn" + (currentThemeChoice() === o[0] ? " is-active" : ""), o[1]);
+      b.type = "button";
+      b.addEventListener("click", function () { applyThemeChoice(o[0]); renderSettings(); });
+      seg.appendChild(b);
     });
-    paintTheme();
+    row.appendChild(seg);
+    appear.appendChild(row);
+    appear.appendChild(el("p", "bank-intro", "“System” follows your device's light/dark setting."));
+    settingsContentEl.appendChild(appear);
+
+    // Add a prayer card
+    var form = el("form", "card add-form");
+    form.appendChild(el("h3", "add-title", "Add a prayer card"));
+    form.appendChild(el("p", "bank-intro", "Adds a person or topic to your Supplication list and Prayer Cards."));
+    var nin = textInput("Name or topic (e.g. Neighbor, Work)");
+    form.appendChild(labeledInput("Name / topic", nin));
+    var btn = el("button", "btn btn-primary", "Add card"); btn.type = "submit"; form.appendChild(btn);
+    var note = el("p", "settings-note");
+    form.appendChild(note);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var v = nin.value.trim();
+      if (addSubject(v)) { nin.value = ""; note.textContent = "Added “" + v + "”. Find it in Prayer Cards & Supplication."; }
+      else { nin.focus(); note.textContent = v ? "“" + v + "” already exists." : ""; }
+    });
+    settingsContentEl.appendChild(form);
   }
 
   // ---- go -------------------------------------------------------------------
