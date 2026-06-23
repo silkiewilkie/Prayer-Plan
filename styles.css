@@ -188,8 +188,8 @@ body {
 .day-arrow {
   appearance: none;
   flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
@@ -197,25 +197,40 @@ body {
   color: var(--ink-soft);
   font-size: 1.35rem;
   line-height: 1;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease,
+    opacity 0.15s ease;
 }
 .day-arrow:hover { color: var(--brand); }
 .day-arrow:active { transform: scale(0.94); }
+.day-arrow:disabled { opacity: 0.32; cursor: default; }
+.day-arrow:disabled:hover { color: var(--ink-soft); }
 
-/* ---- day heading ---------------------------------------------------------- */
+/* ---- day heading (centered between arrows) -------------------------------- */
 .day-heading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.day-heading-top {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 4px 2px 16px;
+  gap: 8px;
 }
 .day-name {
   margin: 0;
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.03em;
+}
+.day-date {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-faint);
 }
 .today-badge {
   font-size: 0.68rem;
@@ -291,6 +306,60 @@ body {
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--accent);
+}
+
+/* check-off toggle */
+.check-toggle {
+  appearance: none;
+  margin-left: auto;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--line);
+  background: transparent;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.check-toggle:hover { border-color: var(--accent); }
+.check-toggle:active { transform: scale(0.9); }
+.check-toggle.is-checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.card.is-prayed { opacity: 0.72; }
+.card.is-prayed .scripture-text,
+.card.is-prayed .term-def,
+.card.is-prayed .supplication-request { color: var(--ink-soft); }
+
+/* notes card */
+.card--notes { --accent: var(--ink-faint); }
+.notes-input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-scripture);
+  font-size: 1.02rem;
+  line-height: 1.5;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 70px;
+}
+.notes-input::placeholder { color: var(--ink-faint); font-style: italic; }
+.notes-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
 }
 
 /* term + definition */

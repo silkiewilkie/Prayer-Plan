@@ -1,16 +1,23 @@
 /* =============================================================================
- * Prayer Plan — rendering & navigation.
- * Reads content from the global PRAYER_PLAN (defined in data.js).
- * No frameworks, no network requests — works from GitHub Pages or a local file.
- * To change WHAT is shown, edit data.js. This file controls HOW it's shown.
+ * Prayer Plan — rotation engine, day history, check-off & notes.
+ *
+ * Each day draws a fresh set from the banks in data.js, shuffled and
+ * non-repeating until a bank is exhausted, then reshuffled. The draw for a day
+ * is generated once and saved, so reopening shows the same plan. Past days stay
+ * browsable. Check-offs and notes are saved per day. Everything persists in the
+ * browser via localStorage — no account, no server.
+ *
+ * Edit WHAT is shown in data.js. This file controls HOW it works.
  * ============================================================================= */
 (function () {
   "use strict";
 
-  var days = PRAYER_PLAN.days;
+  var STORAGE_KEY = "prayerPlan.v3";
+  var banks = PRAYER_PLAN.banks;
+  var subjects = PRAYER_PLAN.supplication.subjects;
+  var counts = PRAYER_PLAN.dailyCounts || {};
 
   // ---- element handles ------------------------------------------------------
-  var pillsEl = document.getElementById("day-pills");
   var headingEl = document.getElementById("day-heading");
   var contentEl = document.getElementById("day-content");
   var attributesEl = document.getElementById("attributes-content");
@@ -20,23 +27,129 @@
   var attributesView = document.getElementById("attributes-view");
   var viewTabs = document.querySelectorAll(".view-tab");
 
-  // ---- pick the starting day = today ----------------------------------------
-  // JS getDay(): Sunday=0..Saturday=6. Our data is ordered Monday..Sunday.
-  var jsToIndex = [6, 0, 1, 2, 3, 4, 5]; // map getDay() -> index in days[]
-  var todayIndex = jsToIndex[new Date().getDay()];
-  if (todayIndex == null || todayIndex < 0 || todayIndex >= days.length) {
-    todayIndex = 0;
-  }
-  var activeIndex = todayIndex;
-
-  // ---- small helpers --------------------------------------------------------
+  // ---- tiny helpers ---------------------------------------------------------
   function el(tag, className, text) {
     var node = document.createElement(tag);
     if (className) node.className = className;
     if (text != null) node.textContent = text;
     return node;
   }
+  function range(n) { var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function keyFor(date) {
+    return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
+  }
+  function dateFromKey(key) {
+    var p = key.split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  var WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+    "August", "September", "October", "November", "December"];
 
+  // ---- persistent state -----------------------------------------------------
+  function freshState() {
+    return {
+      version: 3,
+      queues: { adoration: [], confession: [], thanksgiving: [], supplication: {} },
+      history: {},   // dateKey -> generated plan snapshot
+      order: [],     // dateKeys in the order they were generated (chronological)
+      journal: {}    // dateKey -> { checks: {section:bool}, notes: "" }
+    };
+  }
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return freshState();
+      var s = JSON.parse(raw);
+      if (!s || s.version !== 3) return freshState();
+      s.queues = s.queues || { adoration: [], confession: [], thanksgiving: [], supplication: {} };
+      s.queues.supplication = s.queues.supplication || {};
+      s.history = s.history || {};
+      s.order = s.order || [];
+      s.journal = s.journal || {};
+      return s;
+    } catch (e) {
+      return freshState();
+    }
+  }
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+  var state = loadState();
+
+  // ---- the rotation: draw `count` distinct items from a refilling queue ------
+  // The queue is a shuffled list of bank indices, consumed front-to-back. When
+  // it empties, it reshuffles — so nothing repeats until the bank is exhausted.
+  function draw(queue, bankLen, count) {
+    var picked = [];
+    if (bankLen === 0) return picked;
+    count = Math.min(count, bankLen);
+    var guard = 0;
+    while (picked.length < count && guard++ < bankLen * 4) {
+      if (!queue.length) {
+        var deck = shuffle(range(bankLen));
+        for (var i = 0; i < deck.length; i++) queue.push(deck[i]);
+      }
+      var idx = queue.shift();
+      if (idx < bankLen && picked.indexOf(idx) === -1) picked.push(idx);
+    }
+    return picked;
+  }
+
+  function generatePlan(key) {
+    var date = dateFromKey(key);
+    var q = state.queues;
+
+    var aIdx = draw(q.adoration, banks.adoration.length, counts.adoration || 1);
+    var cIdx = draw(q.confession, banks.confession.length, counts.confession || 1);
+    var tIdx = draw(q.thanksgiving, banks.thanksgiving.length, counts.thanksgiving || 1);
+
+    var supp = subjects.map(function (subj) {
+      if (!q.supplication[subj.name]) q.supplication[subj.name] = [];
+      var idx = draw(q.supplication[subj.name], subj.requests.length, 1)[0];
+      return { name: subj.name, request: subj.requests[idx] };
+    });
+
+    return {
+      key: key,
+      weekday: WEEKDAYS[date.getDay()],
+      label: MONTHS[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear(),
+      adoration: aIdx.map(function (i) { return banks.adoration[i]; }),
+      confession: cIdx.map(function (i) { return banks.confession[i]; }),
+      thanksgiving: tIdx.map(function (i) { return banks.thanksgiving[i]; }),
+      supplication: supp
+    };
+  }
+
+  // make sure today's plan exists; returns today's key
+  function ensureToday() {
+    var key = keyFor(new Date());
+    if (!state.history[key]) {
+      state.history[key] = generatePlan(key);
+      state.order.push(key);
+      saveState();
+    }
+    return key;
+  }
+
+  var todayKey = ensureToday();
+  var viewKey = todayKey; // which day is currently on screen
+
+  // ---- journal (checks + notes) per day -------------------------------------
+  function journalFor(key) {
+    if (!state.journal[key]) state.journal[key] = { checks: {}, notes: "" };
+    return state.journal[key];
+  }
+
+  // ---- scripture + card builders --------------------------------------------
   function renderScripture(parent, scripture) {
     var fig = el("figure", "scripture");
     fig.appendChild(el("figcaption", "scripture-ref", scripture.ref));
@@ -44,8 +157,7 @@
     parent.appendChild(fig);
   }
 
-  // Build one ACTS card. `letter` is the A/C/T/S badge, `kind` a CSS modifier.
-  function buildCard(letter, kind, label, title) {
+  function buildCard(section, letter, kind, label, title) {
     var card = el("article", "card card--" + kind);
     var head = el("header", "card-head");
     head.appendChild(el("span", "card-badge", letter));
@@ -53,95 +165,131 @@
     heading.appendChild(el("span", "card-label", label));
     if (title) heading.appendChild(el("span", "card-title", title));
     head.appendChild(heading);
+
+    // check-off toggle
+    var jr = journalFor(viewKey);
+    var check = el("button", "check-toggle");
+    check.type = "button";
+    check.setAttribute("aria-label", "Mark " + label + " as prayed");
+    function paint() {
+      var on = !!jr.checks[section];
+      check.classList.toggle("is-checked", on);
+      check.setAttribute("aria-pressed", on ? "true" : "false");
+      check.innerHTML = on ? "&#10003;" : "";
+    }
+    check.addEventListener("click", function () {
+      jr.checks[section] = !jr.checks[section];
+      saveState();
+      paint();
+      card.classList.toggle("is-prayed", !!jr.checks[section]);
+    });
+    paint();
+    card.classList.toggle("is-prayed", !!jr.checks[section]);
+    head.appendChild(check);
+
     card.appendChild(head);
     return card;
   }
 
-  // term + definition + scripture (used by Adoration & Confession)
   function appendTermItems(card, items) {
     items.forEach(function (item) {
       var block = el("div", "term-block");
       var line = el("p", "term-line");
       line.appendChild(el("span", "term-name", item.term));
-      if (item.definition) {
-        line.appendChild(el("span", "term-def", " — " + item.definition));
-      }
+      if (item.definition) line.appendChild(el("span", "term-def", " — " + item.definition));
       block.appendChild(line);
       if (item.scripture) renderScripture(block, item.scripture);
       card.appendChild(block);
     });
   }
 
-  function renderDay(index) {
-    var day = days[index];
+  // ---- render one day -------------------------------------------------------
+  function renderDay(key) {
+    viewKey = key;
+    var plan = state.history[key];
 
-    // day heading with a "Today" badge when applicable
+    // heading: weekday, date, Today badge
     headingEl.innerHTML = "";
-    headingEl.appendChild(el("h2", "day-name", day.name));
-    if (index === todayIndex) {
-      headingEl.appendChild(el("span", "today-badge", "Today"));
-    }
+    var top = el("div", "day-heading-top");
+    top.appendChild(el("span", "day-name", plan.weekday));
+    if (key === todayKey) top.appendChild(el("span", "today-badge", "Today"));
+    headingEl.appendChild(top);
+    headingEl.appendChild(el("span", "day-date", plan.label));
 
+    // sections
     contentEl.innerHTML = "";
 
-    // Adoration
-    var a = buildCard("A", "adoration", "Adoration", day.adoration.title);
-    appendTermItems(a, day.adoration.items);
+    var a = buildCard("adoration", "A", "adoration", "Adoration",
+      plan.adoration.map(function (x) { return x.term; }).join(" · "));
+    appendTermItems(a, plan.adoration);
     contentEl.appendChild(a);
 
-    // Confession
-    var c = buildCard("C", "confession", "Confession", day.confession.title);
-    appendTermItems(c, day.confession.items);
+    var c = buildCard("confession", "C", "confession", "Confession",
+      plan.confession.map(function (x) { return x.term; }).join(" · "));
+    appendTermItems(c, plan.confession);
     contentEl.appendChild(c);
 
-    // Thanksgiving
-    var t = buildCard("T", "thanksgiving", "Thanksgiving", day.thanksgiving.title);
-    day.thanksgiving.scriptures.forEach(function (s) {
-      renderScripture(t, s);
+    var t = buildCard("thanksgiving", "T", "thanksgiving", "Thanksgiving",
+      plan.thanksgiving.map(function (x) { return x.title; }).join(" · "));
+    plan.thanksgiving.forEach(function (theme) {
+      theme.scriptures.forEach(function (s) { renderScripture(t, s); });
     });
     contentEl.appendChild(t);
 
-    // Supplication
-    var s = buildCard("S", "supplication", "Supplication", "");
+    var s = buildCard("supplication", "S", "supplication", "Supplication", "");
     var list = el("ul", "supplication-list");
-    day.supplication.items.forEach(function (item) {
+    plan.supplication.forEach(function (item) {
       var li = el("li", "supplication-item");
-      li.appendChild(el("span", "supplication-subject", item.subject));
-      li.appendChild(el("span", "supplication-arrow", "→"));
+      li.appendChild(el("span", "supplication-subject", item.name));
       li.appendChild(el("span", "supplication-request", item.request));
       list.appendChild(li);
     });
     s.appendChild(list);
     contentEl.appendChild(s);
 
-    // refresh active pill
-    var pills = pillsEl.querySelectorAll(".day-pill");
-    pills.forEach(function (pill, i) {
-      var on = i === index;
-      pill.classList.toggle("is-active", on);
-      pill.setAttribute("aria-selected", on ? "true" : "false");
+    // notes card
+    contentEl.appendChild(buildNotesCard(key));
+
+    // nav button availability (order is chronological; can't go past today)
+    var pos = state.order.indexOf(key);
+    prevBtn.disabled = pos <= 0;
+    nextBtn.disabled = pos >= state.order.length - 1;
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function buildNotesCard(key) {
+    var jr = journalFor(key);
+    var card = el("article", "card card--notes");
+    var head = el("header", "card-head");
+    head.appendChild(el("span", "card-badge", "✎"));
+    var heading = el("div", "card-heading");
+    heading.appendChild(el("span", "card-label", "Notes"));
+    head.appendChild(heading);
+    card.appendChild(head);
+
+    var ta = el("textarea", "notes-input");
+    ta.placeholder = "Write a prayer, a reflection, or anything God brings to mind…";
+    ta.value = jr.notes || "";
+    ta.rows = 3;
+    var timer = null;
+    ta.addEventListener("input", function () {
+      jr.notes = ta.value;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(saveState, 400);
     });
-
-    contentEl.scrollIntoView({ block: "nearest" });
+    card.appendChild(ta);
+    return card;
   }
 
-  function setActive(index) {
-    activeIndex = (index + days.length) % days.length; // wrap around the week
-    renderDay(activeIndex);
+  // ---- day navigation through history ---------------------------------------
+  function step(delta) {
+    var pos = state.order.indexOf(viewKey);
+    var next = pos + delta;
+    if (next >= 0 && next < state.order.length) renderDay(state.order[next]);
   }
-
-  // ---- build the day pills once ---------------------------------------------
-  days.forEach(function (day, i) {
-    var pill = el("button", "day-pill", day.name.slice(0, 3));
-    pill.type = "button";
-    pill.setAttribute("role", "tab");
-    pill.title = day.name;
-    pill.addEventListener("click", function () { setActive(i); });
-    pillsEl.appendChild(pill);
-  });
-
-  prevBtn.addEventListener("click", function () { setActive(activeIndex - 1); });
-  nextBtn.addEventListener("click", function () { setActive(activeIndex + 1); });
+  prevBtn.addEventListener("click", function () { step(-1); });
+  nextBtn.addEventListener("click", function () { step(1); });
 
   // ---- view switching (Daily <-> Attributes) --------------------------------
   function showView(name) {
@@ -157,7 +305,7 @@
     tab.addEventListener("click", function () { showView(tab.dataset.view); });
   });
 
-  // ---- render the Attributes reference once ---------------------------------
+  // ---- attributes reference -------------------------------------------------
   PRAYER_PLAN.attributes.forEach(function (attr) {
     var row = el("div", "attribute");
     row.appendChild(el("span", "attribute-name", attr.name));
@@ -165,18 +313,22 @@
     attributesEl.appendChild(row);
   });
 
-  // ---- swipe navigation on touch devices ------------------------------------
-  var touchX = null;
+  // ---- swipe navigation -----------------------------------------------------
+  var touchX = null, touchY = null;
   document.addEventListener("touchstart", function (e) {
     touchX = e.changedTouches[0].clientX;
+    touchY = e.changedTouches[0].clientY;
   }, { passive: true });
   document.addEventListener("touchend", function (e) {
     if (touchX === null || dayView.classList.contains("is-hidden")) return;
     var dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 60) setActive(activeIndex + (dx < 0 ? 1 : -1));
-    touchX = null;
+    var dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      step(dx < 0 ? 1 : -1); // swipe left = newer, right = older
+    }
+    touchX = touchY = null;
   }, { passive: true });
 
-  // ---- go ------------------------------------------------------------------
-  renderDay(activeIndex);
+  // ---- go -------------------------------------------------------------------
+  renderDay(todayKey);
 })();

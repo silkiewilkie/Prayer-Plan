@@ -1,12 +1,17 @@
 # Weekly Prayer Plan
 
-A simple, phone-friendly web app for praying through a weekly plan that follows
-the **ACTS** model — **A**doration, **C**onfession, **T**hanksgiving,
-**S**upplication — with a different focus for each day, plus an
+A simple, phone-friendly web app for praying through the **ACTS** model —
+**A**doration, **C**onfession, **T**hanksgiving, **S**upplication — plus an
 **Attributes of God** reference.
 
-It opens automatically to **today's** plan, and you can tap the day buttons,
-use the ‹ › arrows, or swipe left/right to move through the week.
+Instead of a fixed week, the app keeps a **bank** of items for each section and
+**draws a fresh plan each day**, shuffling and working through every bank
+**without repeating** an item until the whole bank has been used, then
+reshuffling. Today's draw is locked in (reopening shows the same plan), and you
+can swipe or use the ‹ › arrows to **re-read previous days**.
+
+You can also **check off** each section as you pray it and jot **notes** for the
+day — both saved privately in your browser.
 
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.
@@ -19,24 +24,32 @@ JavaScript.
 ## Editing the content
 
 **All content lives in [`data.js`](data.js) — that's the only file you edit.**
-You do not need to touch the HTML, CSS, or `app.js`.
+You do not need to touch the HTML, CSS, or `app.js`. The bigger each bank, the
+more variety before anything repeats. After editing, just reload the page.
 
 Inside `data.js`:
 
-- `PRAYER_PLAN.days` — the seven days. Each day has four sections:
-  - `adoration` / `confession` — a `title` plus a list of `items`, where each
-    item is `{ term, definition, scripture }`. Add an item for a second
-    attribute/sin, or remove one for a single.
-  - `thanksgiving` — a `title` plus a list of `scriptures` (`{ ref, text }`).
-  - `supplication` — a list of prayer points, each `{ subject, request }`.
-- `PRAYER_PLAN.attributes` — the alphabetical Attributes of God list,
+- `PRAYER_PLAN.dailyCounts` — how many items to draw per day from each bank,
+  e.g. `{ adoration: 1, confession: 2, thanksgiving: 1 }`.
+- `PRAYER_PLAN.banks.adoration` / `.confession` — a list of
+  `{ term, definition, scripture }` items.
+- `PRAYER_PLAN.banks.thanksgiving` — a list of `{ title, scriptures: [ {ref,text} ] }`.
+- `PRAYER_PLAN.supplication.subjects` — the people/areas you pray for, each
+  `{ name, requests: [ "...", "..." ] }`. Every subject appears daily with one
+  request drawn from its list in rotation.
+- `PRAYER_PLAN.attributes` — the alphabetical Attributes of God reference,
   each `{ name, definition }`.
+
+A scripture is always `{ ref: "Book 1:1", text: "the verse..." }`.
 
 Tips:
 - Keep text wrapped in `"double quotes"` and keep the trailing commas.
 - If a verse contains a `"`, write it as `\"` so it doesn't end the line early.
   (Curly quotes `“ ”` are fine as-is.)
-- After editing, just reload the page to see your changes.
+
+> **Note on saved data:** your check-offs and notes live in this browser only
+> (via `localStorage`). They aren't synced across devices and will clear if you
+> wipe site data. Editing `data.js` never touches them.
 
 ## Publishing (GitHub Pages)
 
@@ -53,8 +66,8 @@ Tips:
 
 | File | What it is |
 |------|------------|
-| `data.js` | **Your content** — edit this. |
+| `data.js` | **Your content** — the banks. Edit this. |
 | `index.html` | Page shell. |
-| `app.js` | Renders the content and handles day/view navigation. |
-| `styles.css` | Styling (mobile-first, print-friendly). |
+| `app.js` | Rotation engine, day history, check-off & notes, view navigation. |
+| `styles.css` | Styling (mobile-first, dark mode, print-friendly). |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is. |

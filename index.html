@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
   <header class="site-header">
@@ -24,13 +24,11 @@
 
   <!-- DAY VIEW -->
   <main id="day-view" class="view">
-    <nav class="day-nav" aria-label="Day of the week">
+    <nav class="day-nav" aria-label="Choose day">
       <button type="button" class="day-arrow" id="prev-day" aria-label="Previous day">&#8249;</button>
-      <div class="day-pills" id="day-pills" role="tablist"></div>
+      <div class="day-heading" id="day-heading"></div>
       <button type="button" class="day-arrow" id="next-day" aria-label="Next day">&#8250;</button>
     </nav>
-
-    <header class="day-heading" id="day-heading"></header>
 
     <section id="day-content" class="day-content" aria-live="polite"></section>
   </main>
@@ -45,7 +43,7 @@
   </footer>
 
   <!-- data.js holds all editable content; app.js renders it. Order matters. -->
-  <script src="data.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="data.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
