@@ -32,6 +32,14 @@ Your choices are remembered and applied before paint (no flash).
 There is no build step and no dependencies — just static HTML, CSS, and
 JavaScript.
 
+## Install it (offline app)
+
+The app is a PWA: open the site, then **Add to Home Screen** (iOS Safari: Share →
+Add to Home Screen; Android Chrome: ⋮ → Add to Home screen / Install). It then
+launches full-screen with its own icon and works **offline** — a service worker
+(`sw.js`) caches the app shell and assets, and the content/notes/cards already
+live in your browser. `manifest.webmanifest` defines the name and icons.
+
 ## View it
 
 - **Locally:** open `index.html` in any web browser.
