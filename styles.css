@@ -1052,7 +1052,9 @@ body {
 
 /* ---- scroll style: parchment texture + cursive ---------------------------- */
 :root[data-style="scroll"] body {
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.7;
   background-color: #e7d6af;
   background-image:
     radial-gradient(55% 40% at 18% 16%, rgba(120, 90, 40, 0.07), transparent),
@@ -1102,7 +1104,21 @@ body {
 :root[data-style="scroll"] .scripture-text { font-style: normal; }
 :root[data-style="scroll"] .term-name,
 :root[data-style="scroll"] .supplication-subject,
-:root[data-style="scroll"] .request-text { font-weight: 600; }
+:root[data-style="scroll"] .request-text { font-weight: 700; }
+/* readability boosts for the cursive: heavier strokes, larger, airier */
+:root[data-style="scroll"] .scripture-text {
+  font-size: 1.22rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+:root[data-style="scroll"] .pc-body { --rule: 2.15rem; }
+:root[data-style="scroll"] .term-def,
+:root[data-style="scroll"] .supplication-request,
+:root[data-style="scroll"] .attribute-def,
+:root[data-style="scroll"] .pc-answer-text,
+:root[data-style="scroll"] .bank-intro,
+:root[data-style="scroll"] .supplication-request,
+:root[data-style="scroll"] .notes-input { font-weight: 600; }
 
 /* ---- ancient style accents ------------------------------------------------ */
 :root[data-style="ancient"] body {
