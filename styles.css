@@ -600,6 +600,90 @@ body {
 
 .export-card { display: flex; flex-direction: column; gap: 10px; }
 
+/* ---- prayer cards --------------------------------------------------------- */
+#cards-content { display: flex; flex-direction: column; gap: 14px; }
+
+.card-counter {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+
+.prayer-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: rise 0.32s cubic-bezier(0.21, 0.61, 0.35, 1) both;
+  /* a faint ruled-card feel */
+  background-image: linear-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size: 100% 2.2rem;
+  background-position: 0 64px;
+}
+
+.pc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--brand);
+}
+.pc-title {
+  margin: 0;
+  flex: 1;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--brand);
+}
+
+.pc-section { display: flex; flex-direction: column; gap: 8px; }
+.pc-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.pc-scripture { margin: 0; border-left-color: var(--brand); }
+.pc-empty { margin: 0; color: var(--ink-faint); font-style: italic; font-size: 0.92rem; }
+
+.pc-requests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pc-request { display: flex; align-items: baseline; gap: 8px; }
+.pc-bullet { color: var(--supplication); font-weight: 800; }
+.pc-request .request-text { flex: 1; }
+
+.pc-answers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pc-answer {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: color-mix(in srgb, var(--thanksgiving) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--thanksgiving) 22%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.pc-answer-date {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--thanksgiving);
+  white-space: nowrap;
+}
+.pc-answer-text { flex: 1; min-width: 0; }
+
+.pc-edit { align-self: flex-start; }
+.pc-btnbar { display: flex; gap: 8px; }
+
 /* ---- print ---------------------------------------------------------------- */
 @media print {
   body { background: #fff; color: #000; }
