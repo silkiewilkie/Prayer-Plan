@@ -295,6 +295,11 @@
     if (key === todayKey) top.appendChild(el("span", "today-badge", "Today"));
     headingEl.appendChild(top);
     headingEl.appendChild(el("span", "day-date", plan.label));
+    if (key !== todayKey) {
+      var jump = el("button", "jump-today", "Jump to today"); jump.type = "button";
+      jump.addEventListener("click", function () { dayCardIndex = 0; renderDay(todayKey); });
+      headingEl.appendChild(jump);
+    }
     updateModeToggle();
     contentEl.innerHTML = "";
     if (todayMode === "cards") renderDayCards(plan);

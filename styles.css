@@ -239,6 +239,22 @@ body {
   font-weight: 500;
   color: var(--ink-faint);
 }
+.jump-today {
+  appearance: none;
+  margin-top: 8px;
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line));
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  color: var(--brand);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.jump-today:hover { background: color-mix(in srgb, var(--brand) 16%, transparent); }
+.jump-today:active { transform: scale(0.96); }
 .today-badge {
   font-size: 0.68rem;
   font-weight: 700;
