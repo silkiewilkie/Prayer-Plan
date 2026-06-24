@@ -67,7 +67,7 @@
   function planRef(uid) { return db.collection("plans").doc(uid); }
 
   var currentUser = null, lastPushed = null, timer = null;
-  var authMode = "signup";
+  var authMode = "login"; // welcome screen defaults to Sign in (newcomers tap "Create one")
 
   function authMsg(err) {
     var c = (err && err.code) || "";
@@ -81,7 +81,7 @@
 
   function renderAuthForm(container) {
     container.innerHTML = "";
-    container.appendChild(elc("p", "auth-mode-title", authMode === "signup" ? "Create your account" : "Welcome back"));
+    container.appendChild(elc("p", "auth-mode-title", authMode === "signup" ? "Create your account" : "Sign in"));
     var em = input("email", "Email");
     var pw = input("password", authMode === "signup" ? "Choose a password (6+ characters)" : "Password");
     container.appendChild(field("Email", em));
