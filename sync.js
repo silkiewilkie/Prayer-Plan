@@ -105,6 +105,10 @@
     if (user) {
       card.appendChild(elc("p", "bank-intro", "Signed in as " + (user.email || "your account") + ". Your plan syncs across devices."));
       var st = elc("p", "settings-note"); st.id = "sync-status"; st.textContent = lastStatus; card.appendChild(st);
+      var bar = elc("div", "pc-btnbar");
+      var bUp = button("Back up to cloud now", "btn btn-primary"); bUp.addEventListener("click", manualBackup); bar.appendChild(bUp);
+      var bDown = button("Restore from cloud", "btn"); bDown.addEventListener("click", manualRestore); bar.appendChild(bDown);
+      card.appendChild(bar);
       var out = button("Sign out", "btn"); out.addEventListener("click", function () { sb.auth.signOut(); }); card.appendChild(out);
     } else {
       card.appendChild(elc("p", "bank-intro", "Using this device only. Sign in to sync your plan across devices."));
@@ -128,8 +132,23 @@
     if (!currentUser) return Promise.resolve();
     var b = readLocal(), s = canon(b);
     return sb.from("plans").upsert({ user_id: currentUser.id, data: b, updated_at: new Date().toISOString() })
-      .then(function (r) { if (r.error) setStatus("Sync error — will retry"); else { lastPushed = s; setStatus("Synced"); } })
+      .then(function (r) {
+        if (r.error) setStatus("Sync error: " + (r.error.message || r.error.hint || "unknown"));
+        else { lastPushed = s; setStatus("Synced ✓"); }
+      })
       .catch(function () { setStatus("Offline — will retry"); });
+  }
+
+  // explicit, user-triggered actions with clear feedback
+  function manualBackup() { setStatus("Backing up…"); return pushNow(); }
+  function manualRestore() {
+    setStatus("Restoring…");
+    return sb.from("plans").select("data").eq("user_id", currentUser.id).maybeSingle().then(function (r) {
+      if (r.error) { setStatus("Restore error: " + (r.error.message || "unknown")); return; }
+      var cloud = r.data && r.data.data;
+      if (cloud && Object.keys(cloud).length) { writeLocal(cloud); window.location.reload(); }
+      else { setStatus("Nothing is saved in the cloud yet — try Back up to cloud."); }
+    }).catch(function () { setStatus("Restore failed (offline?)."); });
   }
   function startAuto() {
     if (timer) return;
