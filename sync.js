@@ -1,11 +1,10 @@
 /* =============================================================================
- * Accounts + cloud sync (Supabase) with a sign-in gate.
+ * Accounts + cloud sync (Firebase Auth + Firestore) with a sign-in gate.
  *
- * Shows a welcome/sign-in screen before the app when signed out (unless the
- * user chose "continue without an account"). When signed in, the whole plan
- * (content, cards, rotation/journal, settings) syncs to the user's row:
- * cloud-wins on login (pull + reload), then debounced auto-push on changes.
- * The app works fully without an account / offline. Decoupled from app.js.
+ * Optional layer — the app works fully without it (local only). When signed in,
+ * the whole plan (content, cards, rotation/journal, settings) is synced to the
+ * user's Firestore document. Safety: an EMPTY cloud never overwrites a non-empty
+ * local plan, so a fresh device can't wipe your data. Decoupled from app.js.
  * ============================================================================= */
 (function () {
   "use strict";
@@ -14,9 +13,9 @@
   var gate = document.getElementById("auth-gate");
   var gateBody = document.getElementById("auth-gate-body");
   var skipBtn = document.getElementById("gate-skip");
-  var cfg = window.PRAYER_CONFIG || {};
-  var hasLib = typeof window.supabase !== "undefined" && window.supabase && window.supabase.createClient;
-  var configured = !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
+  var cfg = window.PRAYER_FIREBASE || {};
+  var hasLib = typeof window.firebase !== "undefined" && window.firebase && window.firebase.initializeApp;
+  var configured = !!(cfg.apiKey && cfg.projectId);
 
   var KEYS = [
     "prayerPlan.content.v1", "prayerPlan.cards.v1", "prayerPlan.v3",
@@ -25,6 +24,15 @@
   function readLocal() { var b = {}; KEYS.forEach(function (k) { var v = localStorage.getItem(k); if (v != null) b[k] = v; }); return b; }
   function canon(b) { var o = {}; KEYS.forEach(function (k) { if (b && b[k] != null) o[k] = b[k]; }); return JSON.stringify(o); }
   function writeLocal(b) { KEYS.forEach(function (k) { if (b && b[k] != null) localStorage.setItem(k, b[k]); else localStorage.removeItem(k); }); }
+  // a bundle "has content" if any bank item or supplication person exists
+  function bundleHasContent(b) {
+    try {
+      var c = JSON.parse((b && b["prayerPlan.content.v1"]) || "{}");
+      if (c.banks && ((c.banks.adoration || []).length || (c.banks.confession || []).length || (c.banks.thanksgiving || []).length)) return true;
+      if (c.supplication && (c.supplication.subjects || []).length) return true;
+    } catch (e) {}
+    return false;
+  }
 
   function elc(tag, cls, txt) { var n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; }
   function field(labelText, inp) { var w = elc("label", "field"); w.appendChild(elc("span", "field-label", labelText)); w.appendChild(inp); return w; }
@@ -40,8 +48,6 @@
   var lastStatus = "";
   function setStatus(s) { lastStatus = s; var el = document.getElementById("sync-status"); if (el) el.textContent = s; }
 
-  // Accounts unavailable (not configured, or offline so the library didn't load):
-  // never block the app — drop the gate and let them use it locally.
   if (!configured || !hasLib) {
     hideGate();
     if (box) {
@@ -55,11 +61,24 @@
     return;
   }
 
-  var sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-  var currentUser = null, lastPushed = null, timer = null;
-  var authMode = "signup"; // welcome screen defaults to "create account"
+  firebase.initializeApp(cfg);
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+  function planRef(uid) { return db.collection("plans").doc(uid); }
 
-  // email/password sign-in controls (used in the gate)
+  var currentUser = null, lastPushed = null, timer = null;
+  var authMode = "signup";
+
+  function authMsg(err) {
+    var c = (err && err.code) || "";
+    if (c === "auth/invalid-email") return "That email looks invalid.";
+    if (c === "auth/weak-password") return "Password must be at least 6 characters.";
+    if (c === "auth/email-already-in-use") return "That email already has an account — try Log in.";
+    if (c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found") return "Email or password is incorrect.";
+    if (c === "auth/network-request-failed") return "Network error — check your connection.";
+    return (err && err.message) || "Something went wrong.";
+  }
+
   function renderAuthForm(container) {
     container.innerHTML = "";
     container.appendChild(elc("p", "auth-mode-title", authMode === "signup" ? "Create your account" : "Welcome back"));
@@ -75,19 +94,11 @@
       if (!pass) { msg.textContent = "Please enter your password."; pw.focus(); return; }
       if (authMode === "signup" && pass.length < 6) { msg.textContent = "Password must be at least 6 characters."; pw.focus(); return; }
       msg.textContent = authMode === "signup" ? "Creating your account…" : "Signing in…";
-      if (authMode === "signup") {
-        sb.auth.signUp({ email: email, password: pass }).then(function (r) {
-          if (r.error) msg.textContent = r.error.message;
-          else if (!r.data.session) msg.textContent = "Account created! Check your email to confirm, then log in.";
-          // otherwise onAuthStateChange signs them in
-        });
-      } else {
-        sb.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
-          if (r.error) msg.textContent = r.error.message;
-        });
-      }
+      var p = authMode === "signup"
+        ? auth.createUserWithEmailAndPassword(email, pass)
+        : auth.signInWithEmailAndPassword(email, pass);
+      p.catch(function (err) { msg.textContent = authMsg(err); });
     });
-    // submit on Enter
     pw.addEventListener("keydown", function (e) { if (e.key === "Enter") primary.click(); });
     container.appendChild(primary);
     container.appendChild(msg);
@@ -96,7 +107,6 @@
     container.appendChild(toggle);
   }
 
-  // account section inside Settings
   function renderAccountBox(user) {
     if (!box) return;
     box.innerHTML = "";
@@ -109,7 +119,7 @@
       var bUp = button("Back up to cloud now", "btn btn-primary"); bUp.addEventListener("click", manualBackup); bar.appendChild(bUp);
       var bDown = button("Restore from cloud", "btn"); bDown.addEventListener("click", manualRestore); bar.appendChild(bDown);
       card.appendChild(bar);
-      var out = button("Sign out", "btn"); out.addEventListener("click", function () { sb.auth.signOut(); }); card.appendChild(out);
+      var out = button("Sign out", "btn"); out.addEventListener("click", function () { auth.signOut(); }); card.appendChild(out);
     } else {
       card.appendChild(elc("p", "bank-intro", "Using this device only. Sign in to sync your plan across devices."));
       var si = button("Sign in / create account", "btn btn-primary");
@@ -131,25 +141,20 @@
   function pushNow() {
     if (!currentUser) return Promise.resolve();
     var b = readLocal(), s = canon(b);
-    return sb.from("plans").upsert({ user_id: currentUser.id, data: b, updated_at: new Date().toISOString() })
-      .then(function (r) {
-        if (r.error) setStatus("Sync error: " + (r.error.message || r.error.hint || "unknown"));
-        else { lastPushed = s; setStatus("Synced ✓"); }
-      })
-      .catch(function () { setStatus("Offline — will retry"); });
+    return planRef(currentUser.uid).set({ data: b, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+      .then(function () { lastPushed = s; setStatus("Synced ✓"); })
+      .catch(function (e) { setStatus("Sync error: " + ((e && e.message) || "unknown")); });
   }
-
-  // explicit, user-triggered actions with clear feedback
   function manualBackup() { setStatus("Backing up…"); return pushNow(); }
   function manualRestore() {
     setStatus("Restoring…");
-    return sb.from("plans").select("data").eq("user_id", currentUser.id).maybeSingle().then(function (r) {
-      if (r.error) { setStatus("Restore error: " + (r.error.message || "unknown")); return; }
-      var cloud = r.data && r.data.data;
-      if (cloud && Object.keys(cloud).length) { writeLocal(cloud); window.location.reload(); }
-      else { setStatus("Nothing is saved in the cloud yet — try Back up to cloud."); }
-    }).catch(function () { setStatus("Restore failed (offline?)."); });
+    return planRef(currentUser.uid).get().then(function (snap) {
+      var cloud = snap.exists ? (snap.data() || {}).data : null;
+      if (cloud && bundleHasContent(cloud)) { writeLocal(cloud); window.location.reload(); }
+      else setStatus("Nothing is saved in the cloud yet — try Back up to cloud.");
+    }).catch(function (e) { setStatus("Restore error: " + ((e && e.message) || "unknown")); });
   }
+
   function startAuto() {
     if (timer) return;
     timer = setInterval(function () {
@@ -163,25 +168,28 @@
   });
 
   function onLogin(user) {
-    currentUser = user; setStatus("Syncing…"); updateUI(user);
-    sb.from("plans").select("data").eq("user_id", user.id).maybeSingle().then(function (r) {
-      if (r.error) { setStatus("Sync error"); startAuto(); return; }
-      var cloud = r.data && r.data.data;
-      if (cloud && Object.keys(cloud).length) {
-        if (canon(cloud) !== canon(readLocal())) { writeLocal(cloud); window.location.reload(); return; }
-        lastPushed = canon(readLocal()); setStatus("Synced"); startAuto();
-      } else { pushNow().then(startAuto); }
-    }).catch(function () { setStatus("Offline"); startAuto(); });
+    currentUser = user;
+    try { localStorage.setItem("prayerPlan.authed", "1"); } catch (e) {}
+    setStatus("Syncing…"); updateUI(user);
+    planRef(user.uid).get().then(function (snap) {
+      var cloud = snap.exists ? (snap.data() || {}).data : null;
+      var localHas = bundleHasContent(readLocal());
+      var cloudHas = cloud && bundleHasContent(cloud);
+      if (cloudHas && canon(cloud) !== canon(readLocal())) { writeLocal(cloud); window.location.reload(); return; }
+      if (!cloudHas && localHas) { setStatus("Saving…"); pushNow().then(startAuto); return; } // protect local from empty cloud
+      lastPushed = canon(readLocal()); setStatus("Synced ✓");
+      if (!snap.exists) pushNow();
+      startAuto();
+    }).catch(function (e) { setStatus("Sync error: " + ((e && e.message) || "unknown")); startAuto(); });
   }
   function onLogout() {
     currentUser = null; stopAuto(); setStatus("");
-    try { localStorage.removeItem("prayerPlan.gate"); } catch (e) {}
+    try { localStorage.removeItem("prayerPlan.authed"); localStorage.removeItem("prayerPlan.gate"); } catch (e) {}
     updateUI(null);
   }
 
   updateUI(null);
-  sb.auth.onAuthStateChange(function (event, session) {
-    var user = session && session.user;
+  auth.onAuthStateChanged(function (user) {
     if (user) { if (!currentUser) onLogin(user); else updateUI(user); }
     else { if (currentUser) onLogout(); else updateUI(null); }
   });

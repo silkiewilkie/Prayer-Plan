@@ -1,8 +1,12 @@
-/* Supabase configuration for accounts + cloud sync.
- * The anon / publishable key is safe to expose publicly — your data is
- * protected by row-level security in the database. (Never put the
- * service_role / secret key here.) */
-window.PRAYER_CONFIG = {
-  supabaseUrl: "https://wcqaqnpnuqlscshhfjex.supabase.co",
-  supabaseAnonKey: "sb_publishable_DNfMNY3yH7KZSYnO4o0pwA_vPFpOquy"
+/* Firebase configuration for accounts + cloud sync.
+ * These values are safe to expose publicly (Firebase web configs are meant to
+ * be in client code) — security is enforced by Firestore rules that let each
+ * user read/write only their own document. */
+window.PRAYER_FIREBASE = {
+  apiKey: "AIzaSyB3Wi1eB-9YF0wJWRxd_qa0pmDVlxhiBAs",
+  authDomain: "personal-prayer-plan.firebaseapp.com",
+  projectId: "personal-prayer-plan",
+  storageBucket: "personal-prayer-plan.firebasestorage.app",
+  messagingSenderId: "344572517909",
+  appId: "1:344572517909:web:990501cf733c2008ddf81c"
 };

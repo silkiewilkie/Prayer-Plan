@@ -29,14 +29,14 @@ Dark) and **Style** — plus an **Add a prayer card** form. Styles:
 
 Your choices are remembered and applied before paint (no flash).
 
-There is no build step. The only dependency is the optional Supabase JS client
+There is no build step. The only dependency is the optional Firebase JS SDK
 (loaded from a CDN) used for accounts.
 
 ## Accounts & sync (optional)
 
-Configured in `config.js` (Supabase URL + public anon key — safe to expose;
-data is protected by row-level security). In **Settings → Account** you can sign
-in with **Google** or email/password. When signed in, your whole plan (banks,
+Configured in `config.js` (Firebase web config — safe to expose; data is
+protected by Firestore security rules). In **Settings → Account** (or the
+welcome screen) you sign in with email + password. When signed in, your whole plan (banks,
 people, cards, answered prayers, notes, settings) syncs to your account and
 follows you across devices; signing in on a new device pulls your saved plan.
 Without signing in, everything still works locally on the device.

@@ -21,16 +21,15 @@
         var s = localStorage.getItem("prayerPlan.style");
         if (s && /^(ancient|celestial|liturgical|scroll)$/.test(s)) document.documentElement.setAttribute("data-style", s);
         var skipped = localStorage.getItem("prayerPlan.gate") === "off";
-        var hasSession = false;
-        for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && /^sb-.*-auth-token$/.test(k)) { hasSession = true; break; } }
-        if (!skipped && !hasSession) document.documentElement.classList.add("show-gate");
+        var authed = localStorage.getItem("prayerPlan.authed") === "1";
+        if (!skipped && !authed) document.documentElement.classList.add("show-gate");
       } catch (e) {}
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Dancing+Script:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Pinyon+Script&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=22" />
+  <link rel="stylesheet" href="styles.css?v=23" />
 </head>
 <body>
   <!-- SIGN-IN GATE (shown before the app when signed out; sync.js fills it) -->
@@ -124,12 +123,14 @@
     <p>“Pray without ceasing.” &mdash; 1 Thessalonians 5:17</p>
   </footer>
 
-  <!-- Order matters: config + supabase, then content, app, then sync. -->
-  <script src="config.js?v=22"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=22"></script>
-  <script src="app.js?v=22"></script>
-  <script src="sync.js?v=22"></script>
+  <!-- Order matters: config + firebase, then content, app, then sync. -->
+  <script src="config.js?v=23"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="data.js?v=23"></script>
+  <script src="app.js?v=23"></script>
+  <script src="sync.js?v=23"></script>
   <script>
     /* Register the service worker for offline / installable use. */
     if ("serviceWorker" in navigator) {
