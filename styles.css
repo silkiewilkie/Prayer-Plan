@@ -1165,6 +1165,64 @@ body {
 :root[data-style="ancient"] .attributes,
 :root[data-style="ancient"] .item-row { border-color: color-mix(in srgb, var(--brand) 22%, var(--line)); }
 
+/* ---- sign-in gate --------------------------------------------------------- */
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+  overflow: auto;
+}
+html.show-gate .auth-gate { display: flex; }
+html.show-gate body { overflow: hidden; }
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 28px 22px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+.auth-logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 1.7rem;
+}
+.auth-card h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.auth-tag { margin: 0; color: var(--ink-soft); font-size: 0.95rem; line-height: 1.5; }
+#auth-gate-body { display: flex; flex-direction: column; gap: 10px; text-align: left; margin-top: 4px; }
+.auth-google { width: 100%; }
+.auth-or { margin: 2px 0; text-align: center; font-size: 0.78rem; color: var(--ink-faint); }
+#auth-gate-body .pc-btnbar { display: flex; gap: 8px; }
+#auth-gate-body .pc-btnbar .btn { flex: 1; }
+.auth-skip {
+  margin-top: 2px;
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  font: inherit;
+  font-size: 0.86rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px;
+}
+
 /* ---- print ---------------------------------------------------------------- */
 @media print {
   body { background: #fff; color: #000; }

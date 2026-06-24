@@ -20,15 +20,30 @@
         if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
         var s = localStorage.getItem("prayerPlan.style");
         if (s && /^(ancient|celestial|liturgical|scroll)$/.test(s)) document.documentElement.setAttribute("data-style", s);
+        var skipped = localStorage.getItem("prayerPlan.gate") === "off";
+        var hasSession = false;
+        for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && /^sb-.*-auth-token$/.test(k)) { hasSession = true; break; } }
+        if (!skipped && !hasSession) document.documentElement.classList.add("show-gate");
       } catch (e) {}
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Dancing+Script:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Pinyon+Script&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=19" />
+  <link rel="stylesheet" href="styles.css?v=20" />
 </head>
 <body>
+  <!-- SIGN-IN GATE (shown before the app when signed out; sync.js fills it) -->
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-card">
+      <div class="auth-logo">&#10013;</div>
+      <h1>Personal Prayer Plan</h1>
+      <p class="auth-tag">A daily rhythm of Adoration, Confession, Thanksgiving, and Supplication. Sign in to sync your plan across devices.</p>
+      <div id="auth-gate-body"></div>
+      <button type="button" id="gate-skip" class="auth-skip">Continue without an account</button>
+    </div>
+  </div>
+
   <header class="site-header">
     <div class="site-header-inner">
       <h1 class="site-title">Personal Prayer Plan</h1>
@@ -110,11 +125,11 @@
   </footer>
 
   <!-- Order matters: config + supabase, then content, app, then sync. -->
-  <script src="config.js?v=19"></script>
+  <script src="config.js?v=20"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="data.js?v=19"></script>
-  <script src="app.js?v=19"></script>
-  <script src="sync.js?v=19"></script>
+  <script src="data.js?v=20"></script>
+  <script src="app.js?v=20"></script>
+  <script src="sync.js?v=20"></script>
   <script>
     /* Register the service worker for offline / installable use. */
     if ("serviceWorker" in navigator) {
