@@ -57,34 +57,43 @@
 
   var sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   var currentUser = null, lastPushed = null, timer = null;
-  function googleRedirect() { return window.location.origin + window.location.pathname; }
+  var authMode = "signup"; // welcome screen defaults to "create account"
 
-  // shared sign-in controls (used in the gate)
+  // email/password sign-in controls (used in the gate)
   function renderAuthForm(container) {
     container.innerHTML = "";
-    var g = button("Continue with Google", "btn btn-primary auth-google");
-    g.addEventListener("click", function () { sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: googleRedirect() } }); });
-    container.appendChild(g);
-    container.appendChild(elc("p", "auth-or", "or use email"));
-    var em = input("email", "Email"), pw = input("password", "Password");
-    container.appendChild(field("Email", em)); container.appendChild(field("Password", pw));
+    container.appendChild(elc("p", "auth-mode-title", authMode === "signup" ? "Create your account" : "Welcome back"));
+    var em = input("email", "Email");
+    var pw = input("password", authMode === "signup" ? "Choose a password (6+ characters)" : "Password");
+    container.appendChild(field("Email", em));
+    container.appendChild(field("Password", pw));
     var msg = elc("p", "settings-note");
-    var bar = elc("div", "pc-btnbar");
-    var login = button("Log in", "btn btn-primary");
-    login.addEventListener("click", function () {
-      msg.textContent = "Signing in…";
-      sb.auth.signInWithPassword({ email: em.value.trim(), password: pw.value }).then(function (r) { if (r.error) msg.textContent = r.error.message; });
+    var primary = button(authMode === "signup" ? "Create account" : "Log in", "btn btn-primary auth-primary");
+    primary.addEventListener("click", function () {
+      var email = em.value.trim(), pass = pw.value;
+      if (!email) { msg.textContent = "Please enter your email."; em.focus(); return; }
+      if (!pass) { msg.textContent = "Please enter your password."; pw.focus(); return; }
+      if (authMode === "signup" && pass.length < 6) { msg.textContent = "Password must be at least 6 characters."; pw.focus(); return; }
+      msg.textContent = authMode === "signup" ? "Creating your account…" : "Signing in…";
+      if (authMode === "signup") {
+        sb.auth.signUp({ email: email, password: pass }).then(function (r) {
+          if (r.error) msg.textContent = r.error.message;
+          else if (!r.data.session) msg.textContent = "Account created! Check your email to confirm, then log in.";
+          // otherwise onAuthStateChange signs them in
+        });
+      } else {
+        sb.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
+          if (r.error) msg.textContent = r.error.message;
+        });
+      }
     });
-    var su = button("Create account", "btn");
-    su.addEventListener("click", function () {
-      msg.textContent = "Creating…";
-      sb.auth.signUp({ email: em.value.trim(), password: pw.value }).then(function (r) {
-        if (r.error) msg.textContent = r.error.message;
-        else if (!r.data.session) msg.textContent = "Account created — check your email to confirm, then log in.";
-      });
-    });
-    bar.appendChild(login); bar.appendChild(su);
-    container.appendChild(bar); container.appendChild(msg);
+    // submit on Enter
+    pw.addEventListener("keydown", function (e) { if (e.key === "Enter") primary.click(); });
+    container.appendChild(primary);
+    container.appendChild(msg);
+    var toggle = button(authMode === "signup" ? "Already have an account? Log in" : "Need an account? Create one", "auth-toggle");
+    toggle.addEventListener("click", function () { authMode = (authMode === "signup") ? "login" : "signup"; renderAuthForm(container); });
+    container.appendChild(toggle);
   }
 
   // account section inside Settings
