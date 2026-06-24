@@ -573,7 +573,6 @@
       row.appendChild(actions);
       bankContentEl.appendChild(row);
     });
-    bankContentEl.appendChild(exportCard());
   }
 
   function renderSupplicationBank() {
@@ -650,7 +649,6 @@
       group.appendChild(rform);
       bankContentEl.appendChild(group);
     });
-    bankContentEl.appendChild(exportCard());
   }
 
   // ===========================================================================
@@ -840,7 +838,6 @@
     card.appendChild(body);
 
     cardsContentEl.appendChild(card);
-    cardsContentEl.appendChild(exportCard());
   }
 
   function stepCard(delta) {
