@@ -23,6 +23,9 @@
   ];
   function readLocal() { var b = {}; KEYS.forEach(function (k) { var v = localStorage.getItem(k); if (v != null) b[k] = v; }); return b; }
   function canon(b) { var o = {}; KEYS.forEach(function (k) { if (b && b[k] != null) o[k] = b[k]; }); return JSON.stringify(o); }
+  // signature of the parts that actually need a reload to re-render (banks/people/cards).
+  // Excludes the daily rotation state so a new day never triggers a pull/reload loop.
+  function contentSig(b) { return JSON.stringify([(b && b["prayerPlan.content.v1"]) || "", (b && b["prayerPlan.cards.v1"]) || ""]); }
   function writeLocal(b) { KEYS.forEach(function (k) { if (b && b[k] != null) localStorage.setItem(k, b[k]); else localStorage.removeItem(k); }); }
   // a bundle "has content" if any bank item or supplication person exists
   function bundleHasContent(b) {
@@ -173,12 +176,21 @@
     setStatus("Syncing…"); updateUI(user);
     planRef(user.uid).get().then(function (snap) {
       var cloud = snap.exists ? (snap.data() || {}).data : null;
-      var localHas = bundleHasContent(readLocal());
+      var localB = readLocal();
+      var localHas = bundleHasContent(localB);
       var cloudHas = cloud && bundleHasContent(cloud);
-      if (cloudHas && canon(cloud) !== canon(readLocal())) { writeLocal(cloud); window.location.reload(); return; }
+      // Only reload for a real content/cards change from another device — never for
+      // the routine daily rotation (that caused a reload loop on a new day).
+      if (cloudHas && contentSig(cloud) !== contentSig(localB)) {
+        var pulled = false; try { pulled = sessionStorage.getItem("pp_pulled") === "1"; } catch (e) {}
+        if (!pulled) {
+          try { sessionStorage.setItem("pp_pulled", "1"); } catch (e) {}
+          writeLocal(cloud); window.location.reload(); return;
+        }
+      }
       if (!cloudHas && localHas) { setStatus("Saving…"); pushNow().then(startAuto); return; } // protect local from empty cloud
-      lastPushed = canon(readLocal()); setStatus("Synced ✓");
-      if (!snap.exists) pushNow();
+      lastPushed = canon(localB); setStatus("Synced ✓");
+      if (!snap.exists || canon(cloud) !== canon(localB)) pushNow(); // reconcile day/journal without reloading
       startAuto();
     }).catch(function (e) { setStatus("Sync error: " + ((e && e.message) || "unknown")); startAuto(); });
   }
